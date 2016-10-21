@@ -645,7 +645,6 @@ void MainWindow::readSettings()
     QSize size = settings.value("size", QSize(800, 600)).toSize();
     move(pos);
     resize(size);
-    getUserToolsFromSettings();
 }
 
 //----------------------------------------------------------------------
@@ -657,7 +656,6 @@ void MainWindow::writeSettings()
     QSettings settings(APP_SYS_NAME, APP_NAME);
     settings.setValue("pos", pos());
     settings.setValue("size", size());
-    putUserToolsToSettings();
 }
 
 //----------------------------------------------------------------------
@@ -679,7 +677,7 @@ void MainWindow::putToSettings(QString name, QVariant value)
     QSettings settings(APP_SYS_NAME, APP_NAME);
     settings.setValue(name, value);
 }
-
+/*
 //----------------------------------------------------------------------
 // Method: getUserToolsFromSettings
 // Retrieves user defined tools from settings file
@@ -690,7 +688,7 @@ void MainWindow::getUserToolsFromSettings()
     int size = settings.beginReadArray("user_tools");
     for (int i = 0; i < size; ++i) {
         settings.setArrayIndex(i);
-        UserDefTool udt;
+        QUserDefTool udt;
         udt.name = settings.value("name").toString();
         udt.desc = settings.value("description").toString();
         udt.exe  = settings.value("executable").toString();
@@ -712,7 +710,7 @@ void MainWindow::putUserToolsToSettings()
     settings.beginWriteArray("user_tools");
     int i = 0;
     foreach (QString key, userDefTools.keys()) {
-        const UserDefTool & udt = userDefTools.value(key);
+        const QUserDefTool & udt = userDefTools.value(key);
         settings.setArrayIndex(i);
         settings.setValue("name", udt.name);
         settings.setValue("description", udt.desc);
@@ -723,6 +721,45 @@ void MainWindow::putUserToolsToSettings()
     }
     settings.endArray();
     settings.setValue("product_types", userDefProdTypes);
+}
+*/
+//----------------------------------------------------------------------
+// Method: getUserToolsFromSettings
+// Retrieves user defined tools from settings file
+//----------------------------------------------------------------------
+void MainWindow::getUserToolsFromSettings()
+{
+    ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
+    
+    userDefTools.clear();
+    for (auto && kv : cfgInfo.userDefTools) {
+        UserDefTool & udt = kv.second;
+        QUserDefTool qudt;
+        qudt.name = QString::fromStdString(udt.name);
+        qudt.desc = QString::fromStdString(udt.desc);
+        qudt.exe  = QString::fromStdString(udt.exe);
+        qudt.args = QString::fromStdString(udt.args);
+        for (auto & s : udt.prod_types) {
+            qudt.prod_types.append(QString::fromStdString(s));
+        }
+        userDefTools[qudt.name] = qudt;
+    }   
+    
+    userDefProdTypes.clear();
+    for (auto & s : cfgInfo.orcParams.productTypes) {
+        userDefProdTypes.append(QString::fromStdString(s));
+    }
+}
+
+//----------------------------------------------------------------------
+// Method: putUserToolsToSettings
+// Retrieves user defined tools from settings file
+//----------------------------------------------------------------------
+void MainWindow::putUserToolsToSettings()
+{
+    /*
+     TODO
+     */
 }
 
 //----------------------------------------------------------------------
@@ -763,10 +800,18 @@ void MainWindow::setActiveSubWindow(QWidget *window)
 //----------------------------------------------------------------------
 void MainWindow::showConfigTool()
 {
-    ConfigTool cfgTool;
+    ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
+    cfgInfo.dump();
+    
+    getUserToolsFromSettings();
 
+    ConfigTool cfgTool;
     cfgTool.readConfig();
-    cfgTool.exec();
+    cfgTool.initExtTools(userDefTools, userDefProdTypes);
+    if (cfgTool.exec()) {
+        cfgTool.getExtTools(userDefTools);
+        putUserToolsToSettings();
+    }
 }
 
 //----------------------------------------------------------------------
@@ -1128,7 +1173,7 @@ void MainWindow::initLocalArchiveView()
     connect(acDefault, SIGNAL(triggered()), this, SLOT(openWithDefault()));
 
     foreach (QString key, userDefTools.keys()) {
-        const UserDefTool & udt = userDefTools.value(key);
+        const QUserDefTool & udt = userDefTools.value(key);
         QAction * ac = new QAction(key, ui->treevwArchive);
         ac->setStatusTip(udt.desc);
         connect(ac, SIGNAL(triggered()), this, SLOT(openWith()));
@@ -1155,7 +1200,7 @@ void MainWindow::openWith()
 {
     QAction * ac = qobject_cast<QAction*>(sender());
     QString key = ac->text();
-    const UserDefTool & udt = userDefTools.value(key);
+    const QUserDefTool & udt = userDefTools.value(key);
 
     QModelIndex m = ui->treevwArchive->currentIndex();
     QString url = m.model()->index(m.row(), 11, m.parent()).data().toString();
@@ -1259,7 +1304,7 @@ void MainWindow::showArchiveTableContextMenu(const QPoint & p)
 
     if (ui->treevwArchive->indexAt(p).isValid()) {
         foreach (QString key, userDefTools.keys()) {
-            const UserDefTool & udt = userDefTools.value(key);
+            const QUserDefTool & udt = userDefTools.value(key);
             if (udt.prod_types.contains(productType) || true) {
                 QAction * ac = acUserTools[key];
                 actions.append(ac);

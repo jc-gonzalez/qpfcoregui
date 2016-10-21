@@ -179,6 +179,7 @@ void Configuration::reset()
     procIt = cfg["processing"]["processors"].begin();
     nodeIt = cfg["nodes"]["node_list"].begin();
     machIt = cfg["machines"].begin();
+    toolIt = cfg["userdeftools"].begin();
 }
 
 //----------------------------------------------------------------------
@@ -344,6 +345,39 @@ void Configuration::getConnectionsForNode(std::string nodeName,
     const Json::Value & nodesToConnect = cfg["connections"][nodeName];
     for (unsigned int i = 0; i < nodesToConnect.size(); ++i) {
         vec.push_back(nodesToConnect[i].asString());
+    }
+}
+
+//----------------------------------------------------------------------
+// Method: getNumUserDefTools
+// Return number of user defined tools
+//----------------------------------------------------------------------
+int Configuration::getNumUserDefTools()
+{
+    return cfg["userdeftools"].size();
+}
+
+//----------------------------------------------------------------------
+// Method: getNode
+// Return node parameters
+//----------------------------------------------------------------------
+void Configuration::getUserDefTool(UserDefTool & t)
+{
+    Json::Value const & v = (*toolIt);
+    t.name = v["name"].asString();
+    t.desc = v["description"].asString();
+    t.exe  = v["executable"].asString();
+    t.args = v["arguments"].asString();
+
+    t.prod_types.clear();
+    Json::Value pTypes = v["product_types"];
+    for (unsigned int i = 0; i < pTypes.size(); ++i) {
+        t.prod_types.push_back(pTypes[i].asString());
+    }
+        
+    toolIt++;
+    if (toolIt == cfg["nodes"]["node_list"].end()) {
+        toolIt = cfg["nodes"]["node_list"].begin();
     }
 }
 
@@ -585,6 +619,8 @@ void Configuration::processConfiguration()
 
     Json::StyledWriter w;
 
+    // START OF: Configuration Reading
+
     // Now, fill in ConfigurationInfo structure
     reset();
     cfgInfo.clear();
@@ -646,12 +682,14 @@ void Configuration::processConfiguration()
         }
     }
 
+    // HMI node
     cfgInfo.qpfhmiCfg.name = getHMINodeName();
     getNodeByName(cfgInfo.qpfhmiCfg.name,
                   cfgInfo.qpfhmiCfg.type,
                   cfgInfo.qpfhmiCfg.clientAddr,
                   cfgInfo.qpfhmiCfg.serverAddr);
 
+    // Master node
     cfgInfo.masterMachine = cfg["nodes"]["master_machine"].asString();
     cfgInfo.isMaster = (cfgInfo.masterMachine == cfgInfo.currentMachine);
 
@@ -673,7 +711,6 @@ void Configuration::processConfiguration()
     }
 
     // Storage areas information
-
     const Json::Value & stge             = cfg["storage"];
     const Json::Value & stgeBase         = stge["base"];
     const Json::Value & stgeIn           = stge["incoming"];
@@ -692,6 +729,15 @@ void Configuration::processConfiguration()
     getExternalStorage(stgeOut,  cfgInfo.storage.outbox);
     getExternalStorage(stgeArch, cfgInfo.storage.archive);
 
+    // User Defined Tools
+    for (int i = 0; i < getNumUserDefTools(); ++i) {
+        UserDefTool udt;
+        getUserDefTool(udt);
+        cfgInfo.userDefTools[udt.name] = udt;
+    }
+    
+    // END OF: Configuration Reading
+    
     // Create peer commnodes for nodes in current machine
     std::vector<std::string> & machineNodes =
             cfgInfo.machineNodes[cfgInfo.currentMachine];

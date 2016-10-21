@@ -1,9 +1,49 @@
+/******************************************************************************
+ * File:    configtool.h
+ *          This file is part of QLA Processing Framework
+ *
+ * Domain:  QPF.qpfgui.configtool
+ *
+ * Version: 1.0
+ *
+ * Date:    2015/09/01
+ *
+ * Copyright (C) 2015, 2016 J C Gonzalez
+ *_____________________________________________________________________________
+ *
+ * Topic: General Information
+ *
+ * Purpose:
+ *   Declare ConfigTool UI class
+ *
+ * Created by:
+ *   J C Gonzalez
+ *
+ * Status:
+ *   Prototype
+ *
+ * Dependencies:
+ *   none
+ *
+ * Files read / modified:
+ *   none
+ *
+ * History:
+ *   See <Changelog>
+ *
+ * About: License Conditions
+ *   See <License>
+ *
+ ******************************************************************************/
+
 #ifndef CONFIGTOOL_H
 #define CONFIGTOOL_H
 
 #include <QDialog>
 
 #include <QtWidgets>
+
+#include "exttooledit.h"
 
 class ModelView : public QWidget {
     Q_OBJECT
@@ -57,15 +97,28 @@ public:
         PageProdProc,
         PageNetwork,
         PageOrchestration,
+        PageExtTools,
         PageStorage,
     };
 
     void readConfig();
 
+    void initExtTools(MapOfUserDefTools & userTools, QStringList pts);
+    void getExtTools(MapOfUserDefTools & userTools);
+
 public slots:
     void save();
     void saveAs();
     void setWorkingPaths(QString newPath);
+
+private slots:
+    void addNewTool();
+    void editTool(QModelIndex idx);
+    void editTool();
+    void editTool(int row);
+    void removeTool();
+    void cancelDlg();
+    void changeToolWithItem(QTableWidgetItem * item);
 
 private:
     ModelView * createListModelView(QAbstractItemView * v,
@@ -78,6 +131,10 @@ private:
 
 private:
     Ui::ConfigTool *ui;
+
+    MapOfUserDefTools userDefTools;
+    MapOfUserDefTools origDefTools;
+    QStringList       prodTypes;
 };
 
 }

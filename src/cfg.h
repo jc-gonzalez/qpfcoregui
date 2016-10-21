@@ -124,6 +124,14 @@ struct StorageConfig {
     StorageExternal   outbox;
 };
 
+struct UserDefTool {
+    std::string name;
+    std::string desc;
+    std::string exe;
+    std::string args;
+    std::vector<std::string> prod_types;
+};
+
 }
 
 #endif  /* CFG_H */

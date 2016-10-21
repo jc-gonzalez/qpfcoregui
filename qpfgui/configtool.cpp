@@ -1,3 +1,41 @@
+/******************************************************************************
+ * File:    configtool.cpp
+ *          This file is part of QLA Processing Framework
+ *
+ * Domain:  QPF.qpfgui.configtool
+ *
+ * Version: 1.0
+ *
+ * Date:    2015/09/01
+ *
+ * Copyright (C) 2015, 2016 J C Gonzalez
+ *_____________________________________________________________________________
+ *
+ * Topic: General Information
+ *
+ * Purpose:
+ *   Implement ConfigTool UI class
+ *
+ * Created by:
+ *   J C Gonzalez
+ *
+ * Status:
+ *   Prototype
+ *
+ * Dependencies:
+ *   none
+ *
+ * Files read / modified:
+ *   none
+ *
+ * History:
+ *   See <Changelog>
+ *
+ * About: License Conditions
+ *   See <License>
+ *
+ ******************************************************************************/
+
 #include "configtool.h"
 #include "ui_configtool.h"
 
@@ -5,6 +43,8 @@
 
 #include "tools.h"
 using LibComm::join;
+
+#include "exttooledit.h"
 
 #include <QHostInfo>
 #include <QFileInfo>
@@ -86,6 +126,7 @@ ConfigTool::ConfigTool(QWidget *parent) :
     ui->btngrpSection->setId(ui->tbtnProdProc      , PageProdProc);
     ui->btngrpSection->setId(ui->tbtnNetwork       , PageNetwork);
     ui->btngrpSection->setId(ui->tbtnOrchestration , PageOrchestration);
+    ui->btngrpSection->setId(ui->tbtnExtTools      , PageExtTools);
     ui->btngrpSection->setId(ui->tbtnStorage       , PageStorage);
 
     connect(ui->edBasePath, SIGNAL(textChanged(QString)), this, SLOT(setWorkingPaths(QString)));
@@ -235,7 +276,7 @@ void ConfigTool::readConfig()
     ModelView * mvRules = createTableModelView(ui->tblviewRules, rulesTable, hdr);
     (void)(mvRules);
 
-    // 5. STORAGE
+    // 6. STORAGE
     ui->edBasePath->setText(C(cfgInfo.storage.base));
     ui->nedLocalArchiveFolder->setText(C(cfgInfo.storage.local_archive.path));
     ui->nedInbox->setText(C(cfgInfo.storage.inbox.path));
@@ -287,5 +328,133 @@ void ConfigTool::setWorkingPaths(QString newPath)
     ui->nedOutbox->setText(base + "/data/outbox");
 }
 
+void ConfigTool::initExtTools(MapOfUserDefTools & userTools, QStringList pts)
+{
+    ui->tblwdgUserDefTools->clear();
+    ui->tblwdgUserDefTools->setRowCount(userTools.count());
+    ui->tblwdgUserDefTools->setColumnCount(5);
+    ui->tblwdgUserDefTools->setHorizontalHeaderLabels(QStringList()
+                                                      << "Name"
+                                                      << "Description"
+                                                      << "Executable"
+                                                      << "Arguments"
+                                                      << "Product types");
+    int row = 0;
+    foreach (QString key, userTools.keys()) {
+        const QUserDefTool & udt = userTools.value(key);
+        ui->tblwdgUserDefTools->setItem(row, 0, new QTableWidgetItem(udt.name));
+        ui->tblwdgUserDefTools->setItem(row, 1, new QTableWidgetItem(udt.desc));
+        ui->tblwdgUserDefTools->setItem(row, 2, new QTableWidgetItem(udt.exe));
+        ui->tblwdgUserDefTools->setItem(row, 3, new QTableWidgetItem(udt.args));
+        ui->tblwdgUserDefTools->setItem(row, 4, new QTableWidgetItem(udt.prod_types.join(QString("|"))));
+        ++row;
+    }
+    userDefTools = userTools;
+    origDefTools = userTools;
+    prodTypes = pts;
+    connect(ui->tblwdgUserDefTools, SIGNAL(itemChanged(QTableWidgetItem*)),
+            this, SLOT(changeToolWithItem(QTableWidgetItem*)));
+}
+
+void ConfigTool::addNewTool()
+{
+    ExtToolEdit dlg;
+    dlg.setProdTypes(prodTypes);
+    if (dlg.exec()) {
+        // Create new tool and append to list in table
+        QUserDefTool udt;
+        dlg.getToolInfo(udt);
+        int row = ui->tblwdgUserDefTools->rowCount();
+        ui->tblwdgUserDefTools->insertRow(row);
+
+        ui->tblwdgUserDefTools->setItem(row, 0, new QTableWidgetItem(udt.name));
+        ui->tblwdgUserDefTools->setItem(row, 2, new QTableWidgetItem(udt.desc));
+        ui->tblwdgUserDefTools->setItem(row, 1, new QTableWidgetItem(udt.exe));
+        ui->tblwdgUserDefTools->setItem(row, 3, new QTableWidgetItem(udt.args));
+        ui->tblwdgUserDefTools->setItem(row, 4, new QTableWidgetItem(udt.prod_types.join(QString("|"))));
+
+        userDefTools[udt.name] = udt;
+    }
+}
+
+void ConfigTool::editTool(QModelIndex idx)
+{
+    int row = idx.row();
+    editTool(row);
+}
+
+void ConfigTool::editTool()
+{
+    QList<QTableWidgetItem*> items = ui->tblwdgUserDefTools->selectedItems();
+    int row = items.first()->row();
+    editTool(row);
+}
+
+void ConfigTool::editTool(int row)
+{
+    QString name = ui->tblwdgUserDefTools->item(row, 0)->data(0).toString();
+    QUserDefTool udt = userDefTools[name];
+    ExtToolEdit dlg;
+    dlg.setProdTypes(prodTypes);
+    dlg.editTool(udt);
+    if (dlg.exec()) {
+        // Create new tool and append to list in table
+        dlg.getToolInfo(udt);
+
+        ui->tblwdgUserDefTools->item(row, 0)->setData(0, udt.name);
+        ui->tblwdgUserDefTools->item(row, 1)->setData(0, udt.desc);
+        ui->tblwdgUserDefTools->item(row, 2)->setData(0, udt.exe);
+        ui->tblwdgUserDefTools->item(row, 3)->setData(0, udt.args);
+        ui->tblwdgUserDefTools->item(row, 4)->setData(0, udt.prod_types.join(QString("|")));
+
+        userDefTools[udt.name] = udt;
+    }
+}
+
+void ConfigTool::changeToolWithItem(QTableWidgetItem * item)
+{
+    QString content = item->data(0).toString();
+    QString name = ui->tblwdgUserDefTools->item(item->row(), 0)->data(0).toString();
+    QUserDefTool & udt = const_cast<QUserDefTool&>(userDefTools[name]);
+    switch (item->column()) {
+    case 0: udt.name       = content; break;
+    case 1: udt.desc       = content; break;
+    case 2: udt.exe        = content; break;
+    case 3: udt.args       = content; break;
+    case 4: udt.prod_types = content.split("|"); break;
+    default: break;
+    }
+}
+
+void ConfigTool::removeTool()
+{
+    QMessageBox msgBox;
+    msgBox.setWindowTitle("Remove tool from list");
+    msgBox.setText("You requested to remove selected user defined tool from the list.");
+    msgBox.setInformativeText("Do you really want to remove this tool?");
+    QPushButton *removeButton = msgBox.addButton(tr("Remove tool"), QMessageBox::ActionRole);
+    QPushButton *cancelButton = msgBox.addButton(QMessageBox::Abort);
+
+    msgBox.exec();
+    if (msgBox.clickedButton() == removeButton) {
+        QList<QTableWidgetItem*> items = ui->tblwdgUserDefTools->selectedItems();
+        int row = items.first()->row();
+        QString name = ui->tblwdgUserDefTools->item(row, 0)->data(0).toString();
+        ui->tblwdgUserDefTools->removeRow(row);
+        userDefTools.remove(name);
+    } else if (msgBox.clickedButton() == cancelButton) {
+        return;
+    }
+}
+
+void ConfigTool::cancelDlg()
+{
+    userDefTools = origDefTools;
+}
+
+void ConfigTool::getExtTools(MapOfUserDefTools & userTools)
+{
+    userTools = userDefTools;
+}
 
 }
