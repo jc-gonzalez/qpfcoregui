@@ -344,13 +344,13 @@ void MainWindow::about()
 #ifndef BUILD_ID
 #define BUILD_ID ""
 #endif
-    
+
     QString buildId(BUILD_ID);
     if (buildId.isEmpty()) {
         char buf[20];
         sprintf(buf, "%ld", (long)(time(0)));
         buildId = QString(buf);
-    } 
+    }
 
     QMessageBox::about(this, tr("About " APP_NAME),
                        tr("This is the " APP_PURPOSE " v " APP_RELEASE "\n"
@@ -730,7 +730,7 @@ void MainWindow::putUserToolsToSettings()
 void MainWindow::getUserToolsFromSettings()
 {
     ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
-    
+
     userDefTools.clear();
     for (auto && kv : cfgInfo.userDefTools) {
         UserDefTool & udt = kv.second;
@@ -743,8 +743,8 @@ void MainWindow::getUserToolsFromSettings()
             qudt.prod_types.append(QString::fromStdString(s));
         }
         userDefTools[qudt.name] = qudt;
-    }   
-    
+    }
+
     userDefProdTypes.clear();
     for (auto & s : cfgInfo.orcParams.productTypes) {
         userDefProdTypes.append(QString::fromStdString(s));
@@ -803,7 +803,7 @@ void MainWindow::showConfigTool()
     static ConfigTool cfgTool;
 
     ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
-        
+
     getUserToolsFromSettings();
 
     cfgTool.readConfig();
@@ -947,12 +947,12 @@ void MainWindow::setLogWatch()
         QString logDir = QString::fromStdString(Log::getLogBaseDir()) + "/" + logDirName;
         QStringList logFiles;
         logFiles << QDir(logDir).entryList(logExtFilter);
-        
+
         // Create MDI window with the log file viewer
         foreach (QString logBaseName, logFiles) {
             QString logFileName(logDir + "/" + logBaseName);
             QString bseName(QFileInfo(logFileName).baseName());
-            
+
             // check that the window for this log does not exist
             QList<QMdiSubWindow *> sws = ui->mdiArea->subWindowList();
             bool doesExist = false;
@@ -964,9 +964,9 @@ void MainWindow::setLogWatch()
                 }
             }
             if (doesExist) { continue; }
-            
+
             activeNodes << bseName;
-            
+
             TextView * pltxted = new TextView;
             pltxted->setStyleSheet(FixedWidthStyle);
             pltxted->setLogName(bseName);
@@ -1033,42 +1033,32 @@ void MainWindow::defineValidTransitions()
 //----------------------------------------------------------------------
 QString MainWindow::getState()
 {
+    static QString stateName(QString::fromStdString(OFF_StateName));
+    static bool requestState = true;
     static bool firstTime = true;
-    static int numOfPasses = 0;
-    static int maxNumOfIterations = 5;
-    static int msSleepTime = 50; // 50 ms = 50_000 us = 50_000_000 ns
-    static bool pingAnswered = true;
-    
-    struct timespec ts = { msSleepTime / 1000, (msSleepTime % 1000) * 1000 * 1000 };
-    
+
     // First, a clean up
     if (firstTime) {
         DBManager::removeICommands("PING");
         DBManager::removeICommands("PONG");
         firstTime = false;
     }
-    
-    // Send ping command to EvtMng
-    if (pingAnswered) { DBManager::addICommand("PING"); }
-    bool gotAnswer = false;
-    int numOfIter = 0;
-    while ((!gotAnswer) && (numOfIter < maxNumOfIterations)) {
-        // Wait a bit, and try to get answer Pong command
-        nanosleep(&ts, NULL);
-        gotAnswer = DBManager::getICommand("PONG", true);
-        ++numOfIter;
+
+    if (requestState) {
+        requestState = false;
+        DBManager::addICommand("PING");
+        return stateName;
     }
 
-    pingAnswered = gotAnswer;
-    isThereActiveCores = gotAnswer;
-    
+    requestState = true;
+    isThereActiveCores = DBManager::getICommand("PONG", true);
+
     if (!isThereActiveCores) {
         // No active cores, set state in DB to OFF
-        DBManager::setState(QString::fromStdString(OFF_StateName)); 
+        DBManager::setState(QString::fromStdString(OFF_StateName));
     }
-    
-    QString stateName = DBManager::getState();
-    
+
+    stateName = DBManager::getState();
     return stateName;
 }
 
@@ -1079,9 +1069,9 @@ QString MainWindow::getState()
 void MainWindow::showState()
 {
     // Retrieve system state
-    QString stateName = getState();   
+    QString stateName = getState();
     int currentState = getStateIdx(stateName.toStdString());
-    
+
     QString stys;
     switch (currentState) {
     case ERROR:
@@ -1117,7 +1107,7 @@ void MainWindow::updateSystemView()
     showState();
 
     quitAllAct->setEnabled(isThereActiveCores);
-        
+
     //== 1. Processing tasks
     procTaskStatusModel->refresh();
     ui->tblvwTaskMonit->resizeColumnsToContents();
