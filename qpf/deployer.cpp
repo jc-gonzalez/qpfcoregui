@@ -98,9 +98,8 @@ Deployer::~Deployer()
 //----------------------------------------------------------------------
 int Deployer::run()
 {
-    //===== Initial (quick and dirty) cleanup =====
-    removeOldFiles();
-    LibComm::Log::setConsoleOutput(verboseOutput);
+    //===== Prepare system for launch =====
+    prepareSystem();
 
     //===== Launch them =====
     launchPeerNodes();
@@ -179,8 +178,8 @@ void Deployer::readConfig(const char * configFile)
 
     hmiNeeded = cfgInfo.hmiPresent;
 
-    std::cerr << Configuration::PATHBase << std::endl;
-    std::cerr << Configuration::PATHBin << std::endl;
+    // std::cerr << Configuration::PATHBase << std::endl;
+    // std::cerr << Configuration::PATHBin << std::endl;
 
     // Ensure paths for the execution are available and readu
     assert(existsDir(Configuration::PATHBase));
@@ -199,6 +198,26 @@ void Deployer::readConfig(const char * configFile)
         }
     }
     LibComm::Log::setLogBaseDir(Configuration::PATHRun);
+}
+
+//----------------------------------------------------------------------
+// Method: prepareSystem
+// Prepares environment and do initial checks
+//----------------------------------------------------------------------
+void Deployer::prepareSystem()
+{
+    L("Checking system . . .");
+
+    //-- Initial (quick and dirty) cleanup
+    removeOldFiles();
+    LibComm::Log::setConsoleOutput(verboseOutput);
+
+    //-- Check Docker is running
+    int status = system("docker info > /tmp/docker.nfo");
+    if (WEXITSTATUS(status) != 0) {
+        std::cerr << "ERROR: Docker service must be started!  Exiting." << std::endl;
+        exit(EXIT_FAILURE);
+    }
 }
 
 //----------------------------------------------------------------------
