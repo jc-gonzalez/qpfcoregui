@@ -48,6 +48,7 @@ using LibComm::join;
 
 #include <QHostInfo>
 #include <QFileInfo>
+#include <QCheckBox>
 
 #define C(x) (x).c_str()
 #define QS(x) QString::fromStdString(x)
@@ -117,6 +118,18 @@ ConfigTool::ConfigTool(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    monitMsgFlags.append(FlagSt({ "START"      , ui->chkMsgsSTARTToDisk     , ui->chkMsgsSTARTToDisk_2 }));
+    monitMsgFlags.append(FlagSt({ "INDATA"     , ui->chkMsgsINDATAToDisk    , ui->chkMsgsINDATAToDisk_2 }));
+    monitMsgFlags.append(FlagSt({ "DATA_RQST"  , ui->chkMsgsDATARQSTToDisk  , ui->chkMsgsDATARQSTToDisk_2 }));
+    monitMsgFlags.append(FlagSt({ "DATA_INFO"  , ui->chkMsgsDATAINFOToDisk  , ui->chkMsgsDATAINFOToDisk_2 }));
+    monitMsgFlags.append(FlagSt({ "MONIT_RQST" , ui->chkMsgsMONITRQSTToDisk , ui->chkMsgsMONITRQSTToDisk_2 }));
+    monitMsgFlags.append(FlagSt({ "MONIT_INFO" , ui->chkMsgsMONITINFOToDisk , ui->chkMsgsMONITINFOToDisk_2 }));
+    monitMsgFlags.append(FlagSt({ "TASK_PROC"  , ui->chkMsgsTASKPROCToDisk  , ui->chkMsgsTASKPROCToDisk_2 }));
+    monitMsgFlags.append(FlagSt({ "TASK_RES"   , ui->chkMsgsTASKRESToDisk   , ui->chkMsgsTASKRESToDisk_2 }));
+    monitMsgFlags.append(FlagSt({ "CMD"        , ui->chkMsgsCMDToDisk       , ui->chkMsgsCMDToDisk_2 }));
+    monitMsgFlags.append(FlagSt({ "STOP"       , ui->chkMsgsSTOPToDisk      , ui->chkMsgsSTOPToDisk_2 }));
+
+
     // Hide non-yet-implemented widgets
     ui->gpboxInput->hide();
     ui->gpboxOutput->hide();
@@ -128,6 +141,7 @@ ConfigTool::ConfigTool(QWidget *parent) :
     ui->btngrpSection->setId(ui->tbtnOrchestration , PageOrchestration);
     ui->btngrpSection->setId(ui->tbtnExtTools      , PageExtTools);
     ui->btngrpSection->setId(ui->tbtnStorage       , PageStorage);
+    ui->btngrpSection->setId(ui->tbtnFlags         , PageFlags);
 
     connect(ui->edBasePath, SIGNAL(textChanged(QString)), this, SLOT(setWorkingPaths(QString)));
 }
@@ -139,7 +153,7 @@ ConfigTool::~ConfigTool()
 
 void ConfigTool::readConfig()
 {
-    ConfigurationInfo cfgInfo = ConfigurationInfo::data();
+    ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
 
     // Generate values for Config. display
     QVector<QStringList> netTable;
@@ -275,12 +289,19 @@ void ConfigTool::readConfig()
     hdr << "Rule name" << "Inputs" << "Condition" << "Processor" << "Outputs";
     ModelView * mvRules = createTableModelView(ui->tblviewRules, rulesTable, hdr);
     (void)(mvRules);
+    
+    // 5. USER DEFINED TOOLS
+    
+    // Already set
 
     // 6. STORAGE
     ui->edBasePath->setText(C(cfgInfo.storage.base));
     ui->nedLocalArchiveFolder->setText(C(cfgInfo.storage.local_archive.path));
     ui->nedInbox->setText(C(cfgInfo.storage.inbox.path));
     ui->nedOutbox->setText(C(cfgInfo.storage.outbox.path));
+    
+    // 7. FLAGS
+    transferFlagsFromCfgToGUI();
 }
 
 ModelView * ConfigTool::createListModelView(QAbstractItemView * v,
@@ -316,6 +337,12 @@ void ConfigTool::saveAs()
     (void)QMessageBox::warning(this, tr("Save as..."),
                                tr("Sorry, but this functionality is not yet implemented."),
                                QMessageBox::Ok);
+}
+
+void ConfigTool::apply()
+{
+    transferFlagsFromGUIToCfg();
+    accept();
 }
 
 void ConfigTool::setWorkingPaths(QString newPath)
@@ -456,5 +483,57 @@ void ConfigTool::getExtTools(MapOfUserDefTools & userTools)
 {
     userTools = userDefTools;
 }
+
+void ConfigTool::transferFlagsFromCfgToGUI()
+{
+    ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
+
+    std::string msgName;
+    
+    std::map<std::string, bool> & fmapDsk = cfgInfo.flags.monit.msgsToDisk;
+    std::map<std::string, bool> & fmapDB  = cfgInfo.flags.monit.msgsToDB;
+
+    for (int i = (int)(MSG_START_IDX); i < (int)(MSG_UNKNOWN_IDX); ++i) {
+        msgName = monitMsgFlags.at(i).msgName;
+        monitMsgFlags.at(i).chkDisk->setChecked(!(fmapDsk.find(msgName) == fmapDsk.end()));
+        monitMsgFlags.at(i).chkDB->setChecked(!(fmapDB.find(msgName) == fmapDB.end()));
+    }
+
+    ui->chkMsgsIncommingInLog->setChecked(cfgInfo.flags.monit.notifyMsgArrival);
+    ui->chkGroupTskAgentLogs->setChecked(cfgInfo.flags.monit.groupTaskAgentLogs);
+
+    ui->chkAllowReproc->setChecked(cfgInfo.flags.proc.allowReprocessing);
+    ui->chkGenerateIntermedProd->setChecked(cfgInfo.flags.proc.intermedProducts);
+
+    ui->chkSendOutputsToArchive->setChecked(cfgInfo.flags.arch.sendOutputsToMainArchive);
+}
+
+void ConfigTool::transferFlagsFromGUIToCfg()
+{
+    ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
+
+    std::string msgName;
+
+    std::map<std::string, bool> & fmapDsk = cfgInfo.flags.monit.msgsToDisk;
+    std::map<std::string, bool> & fmapDB = cfgInfo.flags.monit.msgsToDB;
+    fmapDsk.clear();
+    fmapDB.clear();
+
+    for (int i = (int)(MSG_START_IDX); i < (int)(MSG_UNKNOWN_IDX); ++i) {
+        msgName = monitMsgFlags.at(i).msgName;
+        if (monitMsgFlags.at(i).chkDisk->isChecked()) { fmapDsk[msgName] = true; }
+        if (monitMsgFlags.at(i).chkDB->isChecked()) { fmapDB[msgName] = true; }
+    }
+
+    cfgInfo.flags.monit.notifyMsgArrival   = ui->chkMsgsIncommingInLog->isChecked();
+    cfgInfo.flags.monit.groupTaskAgentLogs = ui->chkGroupTskAgentLogs->isChecked();
+
+    cfgInfo.flags.proc.allowReprocessing = ui->chkAllowReproc->isChecked();
+    cfgInfo.flags.proc.intermedProducts  = ui->chkGenerateIntermedProd->isChecked();
+
+    cfgInfo.flags.arch.sendOutputsToMainArchive = ui->chkSendOutputsToArchive->isChecked();
+}
+
+QVector<ConfigTool::FlagSt> ConfigTool::monitMsgFlags;
 
 }

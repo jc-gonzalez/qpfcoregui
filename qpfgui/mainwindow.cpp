@@ -800,15 +800,16 @@ void MainWindow::setActiveSubWindow(QWidget *window)
 //----------------------------------------------------------------------
 void MainWindow::showConfigTool()
 {
+    static ConfigTool cfgTool;
+
     ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
-    cfgInfo.dump();
-    
+        
     getUserToolsFromSettings();
 
-    ConfigTool cfgTool;
     cfgTool.readConfig();
     cfgTool.initExtTools(userDefTools, userDefProdTypes);
     if (cfgTool.exec()) {
+        std::cerr << "Updating user tools!\n";
         cfgTool.getExtTools(userDefTools);
         putUserToolsToSettings();
     }

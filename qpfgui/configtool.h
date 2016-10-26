@@ -42,6 +42,7 @@
 #include <QDialog>
 
 #include <QtWidgets>
+#include <QCheckBox>
 
 #include "exttooledit.h"
 
@@ -99,6 +100,7 @@ public:
         PageOrchestration,
         PageExtTools,
         PageStorage,
+        PageFlags,
     };
 
     void readConfig();
@@ -109,6 +111,7 @@ public:
 public slots:
     void save();
     void saveAs();
+    void apply();
     void setWorkingPaths(QString newPath);
 
 private slots:
@@ -128,13 +131,24 @@ private:
     ModelView * createTableModelView(QAbstractItemView * v,
                                      QVector<QStringList> & vdlist,
                                      QStringList & hdr);
+    
+    void transferFlagsFromCfgToGUI();
+    void transferFlagsFromGUIToCfg();
 
+    struct FlagSt { 
+        std::string  msgName;
+        QCheckBox  * chkDisk;
+        QCheckBox  * chkDB;
+    };
+    
 private:
     Ui::ConfigTool *ui;
 
     MapOfUserDefTools userDefTools;
     MapOfUserDefTools origDefTools;
     QStringList       prodTypes;
+    
+    static QVector<FlagSt> monitMsgFlags;
 };
 
 }

@@ -736,6 +736,34 @@ void Configuration::processConfiguration()
         cfgInfo.userDefTools[udt.name] = udt;
     }
     
+    // Flags
+    const Json::Value & flags = cfg["flags"];
+    const Json::Value & monitFlags = flags["monitoring"];
+    const Json::Value & procFlags  = flags["processing"];
+    const Json::Value & archFlags  = flags["archiving"];
+    
+    Json::Value::iterator it = monitFlags["msgs_to_disk"].begin();
+    while (it != monitFlags["msgs_to_disk"].end()) {        
+        Json::Value const & v = (*it);
+        std::string msgName = v.asString();
+        cfgInfo.flags.monit.msgsToDisk[msgName] = true;
+        ++it;
+    }
+    it = monitFlags["msgs_to_db"].begin();
+    while (it != monitFlags["msgs_to_db"].end()) {        
+        Json::Value const & v = (*it);
+        std::string msgName = v.asString();
+        cfgInfo.flags.monit.msgsToDB[msgName] = true;
+        ++it;
+    }
+    cfgInfo.flags.monit.notifyMsgArrival         = monitFlags["notify_msg_arrival"].asBool();
+    cfgInfo.flags.monit.groupTaskAgentLogs       = monitFlags["group_task_agent_logs"].asBool();
+    
+    cfgInfo.flags.proc.allowReprocessing         = procFlags["allow_reprocessing"].asBool();
+    cfgInfo.flags.proc.allowReprocessing         = procFlags["intermediate_products"].asBool();
+
+    cfgInfo.flags.arch.sendOutputsToMainArchive  = archFlags["send_outputs_to_main_archive"].asBool();   
+    
     // END OF: Configuration Reading
     
     // Create peer commnodes for nodes in current machine

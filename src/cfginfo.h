@@ -133,6 +133,8 @@ public:
     std::string                         DBUser;
     std::string                         DBPwd;
 
+    FlagsConfig                         flags;
+    
     void clear();
     void dump();
 

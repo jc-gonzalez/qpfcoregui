@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="/img">
+    <file>img/checkmarks.png</file>
     <file>img/exttools.png</file>
     <file>img/processing.png</file>
     <file>img/storage.png</file>
