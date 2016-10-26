@@ -74,7 +74,7 @@ echo "BUILD_ID: ${BUILD_ID}"
 export BUILD_ID
 
 MAKE_OPTS="-k -j4 "
-CMAKE_OPTS="-D CMAKE_INSTALL_PREFIX:PATH=${WORK_AREA}/qpf --graphviz=dependencies.dot "
+CMAKE_OPTS="-D CMAKE_INSTALL_PREFIX:PATH=${WORK_AREA}/qpf -D CMAKE_BUILD_TYPE=Debug --graphviz=dependencies.dot "
 
 ###### Handy functions
 
