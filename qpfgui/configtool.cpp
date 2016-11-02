@@ -50,8 +50,8 @@ using LibComm::join;
 #include <QHostInfo>
 #include <QFileInfo>
 #include <QCheckBox>
-#include <qt5/QtWidgets/qabstractitemview.h>
-#include <qt5/QtWidgets/qmessagebox.h>
+#include <QAbstractItemView>
+#include <QMessageBox>
 #include <QtCore/qnamespace.h>
 
 #define C(x) (x).c_str()
@@ -168,15 +168,6 @@ ConfigTool::ConfigTool(QWidget *parent) :
     ui->btngrpSection->setId(ui->tbtnExtTools      , PageExtTools);
     ui->btngrpSection->setId(ui->tbtnStorage       , PageStorage);
     ui->btngrpSection->setId(ui->tbtnFlags         , PageFlags);
-    
-    signalSender[ui->btnAddHost]         = QPair<QAbstractItemView *, ModelView::Type>(ui->tblviewHosts, ModelView::Table);
-    signalSender[ui->btnRemoveHost]      = QPair<QAbstractItemView *, ModelView::Type>(ui->tblviewHosts, ModelView::Table);
-    signalSender[ui->btnAddProduct]      = QPair<QAbstractItemView *, ModelView::Type>(ui->listProductTypes, ModelView::List);
-    signalSender[ui->btnRemoveProduct]   = QPair<QAbstractItemView *, ModelView::Type>(ui->listProductTypes, ModelView::List);
-    signalSender[ui->btnAddProcessor]    = QPair<QAbstractItemView *, ModelView::Type>(ui->listProcs, ModelView::List);
-    signalSender[ui->btnRemoveProcessor] = QPair<QAbstractItemView *, ModelView::Type>(ui->listProcs, ModelView::List);
-    signalSender[ui->btnAddRule]         = QPair<QAbstractItemView *, ModelView::Type>(ui->tblviewRules, ModelView::Table);
-    signalSender[ui->btnRemoveRule]      = QPair<QAbstractItemView *, ModelView::Type>(ui->tblviewRules, ModelView::Table);
 }
 
 ConfigTool::~ConfigTool()
@@ -640,7 +631,4 @@ void ConfigTool::transferFlagsFromGUIToCfg()
 }
 
 QVector<ConfigTool::FlagSt> ConfigTool::monitMsgFlags;
-QMap<QPushButton *, QPair<QAbstractItemView *, 
-                          ModelView::Type> > ConfigTool::signalSender;
-    
 }
