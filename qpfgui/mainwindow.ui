@@ -514,7 +514,7 @@
      <x>0</x>
      <y>0</y>
      <width>997</width>
-     <height>25</height>
+     <height>19</height>
     </rect>
    </property>
   </widget>
@@ -531,6 +531,9 @@
  <layoutdefault spacing="6" margin="11"/>
  <resources>
   <include location="icon.qrc"/>
+  <include location="jsontree.qrc"/>
+  <include location="configtool.qrc"/>
+  <include location="tx.qrc"/>
  </resources>
  <connections/>
 </ui>
