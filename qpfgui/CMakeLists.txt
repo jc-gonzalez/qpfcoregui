@@ -96,6 +96,7 @@ set (qpfGuiLib_ui
 
 set (qpfGuiLib_qrc
   configtool.qrc
+  jsontree.qrc
   icon.qrc
   tx.qrc)
 
