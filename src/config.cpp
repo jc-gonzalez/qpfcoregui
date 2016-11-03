@@ -375,7 +375,7 @@ void Configuration::getUserDefTool(UserDefTool & t)
     for (unsigned int i = 0; i < pTypes.size(); ++i) {
         t.prod_types.push_back(pTypes[i].asString());
     }
-        
+
     toolIt++;
     if (toolIt == cfg["nodes"]["node_list"].end()) {
         toolIt = cfg["nodes"]["node_list"].begin();
@@ -433,7 +433,7 @@ void Configuration::readConfigurationFromDB()
     dbHdl->setDbName(Configuration::DBName);
     dbHdl->setDbUser(Configuration::DBUser);
     dbHdl->setDbPasswd(Configuration::DBPwd);
-    
+
     // Check that connection with the DB is possible
     try {
         dbHdl->openConnection();
@@ -514,7 +514,7 @@ void Configuration::saveConfigurationToDB()
     ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
     Json::Value dbcfg(cfg);
     dbcfg["products"]["parsing_regex"] = cfgInfo.parsing_regex;
-    
+
     // Transfer config from JSON value to DB
     std::string cmd;
     std::string now = LibComm::timeTag();
@@ -645,7 +645,7 @@ void Configuration::processConfiguration()
     cfgInfo.data_ext         = prds["data_ext"].asString();
     cfgInfo.meta_ext         = prds["meta_ext"].asString();
     cfgInfo.log_ext          = prds["log_ext"].asString();
-    
+
     std::string parsing_regex_str = prds["parsing_regex"].asString();
     cfgInfo.parsing_regex    = getRegExFromCfg(parsing_regex_str);
 
@@ -738,22 +738,22 @@ void Configuration::processConfiguration()
         getUserDefTool(udt);
         cfgInfo.userDefTools[udt.name] = udt;
     }
-    
+
     // Flags
     const Json::Value & flags = cfg["flags"];
     const Json::Value & monitFlags = flags["monitoring"];
     const Json::Value & procFlags  = flags["processing"];
     const Json::Value & archFlags  = flags["archiving"];
-    
+
     Json::Value::iterator it = monitFlags["msgs_to_disk"].begin();
-    while (it != monitFlags["msgs_to_disk"].end()) {        
+    while (it != monitFlags["msgs_to_disk"].end()) {
         Json::Value const & v = (*it);
         std::string msgName = v.asString();
         cfgInfo.flags.monit.msgsToDisk[msgName] = true;
         ++it;
     }
     it = monitFlags["msgs_to_db"].begin();
-    while (it != monitFlags["msgs_to_db"].end()) {        
+    while (it != monitFlags["msgs_to_db"].end()) {
         Json::Value const & v = (*it);
         std::string msgName = v.asString();
         cfgInfo.flags.monit.msgsToDB[msgName] = true;
@@ -761,14 +761,14 @@ void Configuration::processConfiguration()
     }
     cfgInfo.flags.monit.notifyMsgArrival         = monitFlags["notify_msg_arrival"].asBool();
     cfgInfo.flags.monit.groupTaskAgentLogs       = monitFlags["group_task_agent_logs"].asBool();
-    
+
     cfgInfo.flags.proc.allowReprocessing         = procFlags["allow_reprocessing"].asBool();
     cfgInfo.flags.proc.allowReprocessing         = procFlags["intermediate_products"].asBool();
 
-    cfgInfo.flags.arch.sendOutputsToMainArchive  = archFlags["send_outputs_to_main_archive"].asBool();   
-    
+    cfgInfo.flags.arch.sendOutputsToMainArchive  = archFlags["send_outputs_to_main_archive"].asBool();
+
     // END OF: Configuration Reading
-    
+
     // Create peer commnodes for nodes in current machine
     std::vector<std::string> & machineNodes =
             cfgInfo.machineNodes[cfgInfo.currentMachine];

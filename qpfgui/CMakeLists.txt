@@ -129,7 +129,7 @@ add_dependencies (qpfgui qpfGuiLib)
 target_include_directories (qpfgui PUBLIC ../src ../libcomm ../json ../sdc ../infix
   ${PSQLDIR}/include ${ZMQDIR}/include ${CURLDIR}/include
   ${UUIDDIR}/include ${PCRE2DIR}/include)
-target_link_libraries (qpfgui qpfGuiLib qpf libcomm json sdc infix 
+target_link_libraries (qpfgui qpfGuiLib qpf libcomm json sdc infix
   ${PSQLLIB} zmq curl uuid pcre2-posix)
 #target_link_libraries (qpfcore qpf libcomm json sdc infix ${PSQLLIB} zmq curl uuid pcre2-posix)
 

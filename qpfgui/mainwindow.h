@@ -147,6 +147,7 @@ private:
     void showJSONdata(QString title, QString & dataString);
     void binaryGetFITSHeader(QString fileName, QString & tr);
 
+    void addExpandCollapseButtonsTo(QWidget * w);
 
 private:
     Ui::MainWindow *ui;

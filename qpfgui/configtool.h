@@ -55,16 +55,16 @@ namespace QPF {
 class Model : public QAbstractItemModel {
 };
 
-class StandardItemModel : public QStandardItemModel { 
+class StandardItemModel : public QStandardItemModel {
 public:
-    StandardItemModel(int rows, int columns, QObject *parent = Q_NULLPTR) : 
+    StandardItemModel(int rows, int columns, QObject *parent = Q_NULLPTR) :
       QStandardItemModel(rows, columns, parent) {}
     Qt::ItemFlags flags(const QModelIndex&index) const;
 };
 
-class StringListModel : public QStringListModel { 
+class StringListModel : public QStringListModel {
 public:
-    StringListModel(QObject *parent = Q_NULLPTR) : 
+    StringListModel(QObject *parent = Q_NULLPTR) :
       QStringListModel(parent) {}
     Qt::ItemFlags flags(const QModelIndex&index) const;
 };
@@ -135,16 +135,16 @@ public slots:
 private slots:
     void addHost();
     void removeHost();
-    
+
     void addProduct();
     void removeProduct();
-    
+
     void addProcessor();
     void removeProcessor();
-    
+
     void addRule();
     void removeRule();
-    
+
     void removeFromTable(QAbstractItemView * vw, QString item);
 
     void addNewTool();
@@ -163,16 +163,16 @@ private:
     ModelView * createTableModelView(QAbstractItemView * v,
                                      QVector<QStringList> & vdlist,
                                      QStringList & hdr);
-    
+
     void transferFlagsFromCfgToGUI();
     void transferFlagsFromGUIToCfg();
 
-    struct FlagSt { 
+    struct FlagSt {
         std::string  msgName;
         QCheckBox  * chkDisk;
         QCheckBox  * chkDB;
     };
-    
+
 private:
     Ui::ConfigTool *ui;
 

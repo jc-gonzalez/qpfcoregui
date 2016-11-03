@@ -156,14 +156,14 @@ void ConfigurationInfo::dump()
 
     for (auto && kv : userDefTools) {
         UserDefTool & udt = kv.second;
-        std::cerr << udt.name << ", " << udt.desc << " [" 
+        std::cerr << udt.name << ", " << udt.desc << " ["
                   << udt.exe << ' ' << udt.args << "] valid for:";
-        for (auto & s : udt.prod_types) {   
+        for (auto & s : udt.prod_types) {
             std::cerr << ' ' << s;
         }
         std::cerr << '\n';
-    }   
-    
+    }
+
     std::cerr << "==============================================================================" << std::endl;
 }
 

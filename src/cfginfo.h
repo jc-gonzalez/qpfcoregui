@@ -125,7 +125,7 @@ public:
 
     // User Defined (external) tools
     std::map<std::string, UserDefTool>  userDefTools;
-    
+
     // Data Base info
     std::string                         DBHost;
     std::string                         DBPort;
@@ -134,7 +134,7 @@ public:
     std::string                         DBPwd;
 
     FlagsConfig                         flags;
-    
+
     void clear();
     void dump();
 

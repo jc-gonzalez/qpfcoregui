@@ -55,12 +55,12 @@ void sayHello()
         char buf[20];
         sprintf(buf, "%ld", (long)(time(0)));
         buildId = std::string(buf);
-    } 
+    }
     std::string hline("----------------------------------------"
                       "--------------------------------------");
     std::cout << hline << std::endl
             << " " << APP_NAME << " - " << APP_LONG_NAME << std::endl
-            << " " << APP_DATE << " - " 
+            << " " << APP_DATE << " - "
             << APP_RELEASE << " Build " << buildId << std::endl
             << hline << std::endl << std::endl;
 }
