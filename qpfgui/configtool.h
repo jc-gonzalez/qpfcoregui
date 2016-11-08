@@ -135,7 +135,7 @@ public:
         PageFlags,
     };
 
-    void readConfig();
+    void prepare(MapOfUserDefTools & userTools, QStringList pts);
 
     void initExtTools(MapOfUserDefTools & userTools, QStringList pts);
     void getExtTools(MapOfUserDefTools & userTools);
@@ -171,6 +171,9 @@ private slots:
     void changeToolWithItem(QTableWidgetItem * item);
 
 private:
+    void transferCfgToGUI();
+    void transferGUIToCfg();
+
     ModelView * createListModelView(QAbstractItemView * v,
                                     QStringList & dlist,
                                     QString hdr);
@@ -190,6 +193,8 @@ private:
 
 private:
     Ui::ConfigTool *ui;
+
+    std::string cfgDataBackup;
 
     MapOfUserDefTools userDefTools;
     MapOfUserDefTools origDefTools;
