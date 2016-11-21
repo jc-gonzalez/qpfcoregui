@@ -155,8 +155,14 @@ void Configuration::getGeneralInfo(std::string & appName, std::string & appVer, 
     PATHBase = cfg["storage"]["base"]["path"].asString();
     PATHRun  = cfg["storage"]["run"]["path"].asString();
 
+    if (sessionId.empty()) {
+        sessionId = LibComm::sessionTag();
+    }
+
+    ConfigurationInfo::data().session = sessionId;
+    
     PATHBin     = PATHRun + "/bin";
-    PATHSession = PATHRun + "/" + LibComm::sessionTag();
+    PATHSession = PATHRun + "/" + sessionId;
     PATHLog     = PATHSession + "/log";
     PATHRlog    = PATHSession + "/rlog";
     PATHTmp     = PATHSession + "/tmp";
@@ -479,6 +485,22 @@ void Configuration::readConfigurationFromDB()
         return;
     }
 
+    // Get session id
+    if (ConfigurationInfo::data().session.empty()) {
+        try {
+            std::pair<std::string, std::string> sessionAndState;
+            sessionAndState = dbHdl->getLatestState();
+            sessionId = sessionAndState.first;
+        } catch (...) {
+            LibComm::Log::log("SYSTEM", Log::ERROR,
+                              "Unexpected error accessing "
+                              "database for retrieval of session name");
+            return;
+        }
+    } else {
+        sessionId = ConfigurationInfo::data().session;
+    }
+
     // Close connection
     dbHdl->closeConnection();
 
@@ -629,7 +651,7 @@ void Configuration::processConfiguration()
     cfgInfo.currentMachine = getEnvVar("HOSTNAME");
     cfgInfo.currentUser    = getEnvVar("USER");
     cfgInfo.cfgFileName    = cfgFileName;
-
+  
     // General
     getGeneralInfo(cfgInfo.appName, cfgInfo.appVersion, cfgInfo.lastAccess);
 

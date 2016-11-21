@@ -45,6 +45,9 @@
 #include "mainwindow.h"
 #include <QApplication>
 #include <QDebug>
+#include <QSplashScreen>
+
+#define TIME_LAPSE 400000
 
 //----------------------------------------------------------------------
 // Function: usage
@@ -83,6 +86,30 @@ void sayHello()
 }
 
 //----------------------------------------------------------------------
+// Function: ctrlMsg
+// Shows a minimal title and build id for the application
+//----------------------------------------------------------------------
+void ctrlMsg(QSplashScreen & splash, int k = 0)
+{
+    QString msgs[] = {"Loading system configuration",
+                      "Connecting to database",
+                      "Checking components running state",
+                      "Preparing graphical user interface",
+                      "Launching application window",
+                      ""};
+    static int i = 0;
+    
+    static QString appMsg(APP_NAME " - " APP_DATE " - " 
+                          APP_RELEASE " " BUILD_ID);
+    
+    QString msgToShow = "<font color=\"yellow\"><b>" + appMsg + "</b></font><br>" + 
+                        "<font color=\"white\">" + msgs[i++] + "</font>";
+    splash.showMessage(msgToShow, Qt::AlignLeft, Qt::white);
+    qApp->processEvents(QEventLoop::AllEvents);
+    QThread::usleep(TIME_LAPSE);
+}
+
+//----------------------------------------------------------------------
 // Function: main
 // Creates the application main class, parses the command line arguments
 // and invokes the main window
@@ -91,37 +118,47 @@ int main(int argc, char *argv[])
 {    
     QApplication a(argc, argv);
 
+    QPixmap pixmap(":/img/EuclidQPF.png");
+    QSplashScreen splash(pixmap);
+    splash.show();
+
     const QStringList & args = QCoreApplication::arguments();
     const int & numOfArgs = args.count();
 
     sayHello();
     
-    if (numOfArgs > 4) {
-        QString configStr("");
-        QString sessionStr("");
+    ctrlMsg(splash);
+            
+    QString configStr("");
+    QString sessionStr("");
 
-        for (int i = 1; i < numOfArgs; ++i) {
-            const QString & tok = args.at(i);
-            if (tok == "-c") {
-                configStr = args.at(i + 1);
-                ++i;
-            } else if (tok == "-s") {
-                sessionStr = args.at(i + 1);
-                ++i;
-            }
+    for (int i = 1; i < numOfArgs; ++i) {
+        const QString & tok = args.at(i);
+        if (tok == "-c") {
+            configStr = args.at(i + 1);
+            ++i;
+        } else if (tok == "-s") {
+            sessionStr = args.at(i + 1);
+            ++i;
         }
-
-        if (configStr.isEmpty() || sessionStr.isEmpty()) {
-            usage();
-        }
-        
-        QPF::MainWindow w(configStr, sessionStr);
-        w.show();
-        return a.exec();
-
-    } else {
-        usage();
     }
 
-    return EXIT_SUCCESS;
+    ctrlMsg(splash);
+
+    if (configStr.isEmpty()) {
+        usage();
+    }
+    
+    ctrlMsg(splash);
+
+    QPF::MainWindow w(configStr, sessionStr);
+
+    ctrlMsg(splash);
+
+    w.show();
+
+    ctrlMsg(splash);
+    splash.finish(&w);
+            
+    return a.exec();
 }

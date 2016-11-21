@@ -60,8 +60,13 @@ DBManager::~DBManager()
 
 void DBManager::close()
 {
-    db.removeDatabase(activeDb);
+    QStringList cnctNames = db.connectionNames();
+    
     db.close();
+    db = QSqlDatabase();
+    foreach (QString cnctName, cnctNames) {       
+        db.removeDatabase(cnctName);
+    }
 }
 
 void DBManager::checkTaskStatusInfo()
@@ -130,6 +135,19 @@ void DBManager::setState(QString newState)
         qErrnoWarning(qPrintable(qry.lastError().nativeErrorCode() + ": " +
                                  qry.lastError().text()));
     }
+}
+
+QMap<QString,QString> DBManager::getCurrentStates(QString session)
+{
+    QSqlQuery qry(QString("SELECT nodename, state FROM qpfstates " 
+                          "WHERE sessionname = '%1' "
+                          "ORDER BY qpfstate_id;").arg(session), db);
+    QMap<QString,QString> result;
+    while (qry.next()) {
+        result[qry.value(0).toString()] = qry.value(1).toString();
+    }
+
+    return result;
 }
 
 int DBManager::numOfRowsInDbTable(QString tableName)
