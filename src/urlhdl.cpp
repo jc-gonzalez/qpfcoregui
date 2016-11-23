@@ -231,7 +231,7 @@ ProductMetadata & URLHandler::fromGateway2Processing()
                     cfgInfo.storage.gateway.path + section,
                     taskExchgDir + section);
 
-    (void)relocate(file, newFile, isRemote ? COPY_TO_REMOTE : LINK);
+    (void)relocate(file, newFile, MOVE); //isRemote ? COPY_TO_REMOTE : LINK);
 
     // Change url in processing task
     product.url = newUrl;
