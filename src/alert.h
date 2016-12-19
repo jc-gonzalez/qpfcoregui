@@ -4,11 +4,13 @@
  *
  * Domain:  QPF.libQPF.Component
  *
- * Version: 1.0
+ * Version:  1.1
  *
  * Date:    2016/06/21
  *
- * Copyright (C) 2015 J C Gonzalez
+ * Author:   J C Gonzalez
+ *
+ * Copyright (C) 2015,2016 Euclid SOC Team @ ESAC
  *_____________________________________________________________________________
  *
  * Topic: General Information

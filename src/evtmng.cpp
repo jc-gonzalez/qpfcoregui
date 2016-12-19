@@ -4,11 +4,13 @@
  *
  * Domain:  QPF.libQPF.evtmng
  *
- * Version: 1.0
+ * Version:  1.1
  *
  * Date:    2015/07/01
  *
- * Copyright (C) 2015 J C Gonzalez
+ * Author:   J C Gonzalez
+ *
+ * Copyright (C) 2015,2016 Euclid SOC Team @ ESAC
  *_____________________________________________________________________________
  *
  * Topic: General Information
@@ -48,6 +50,8 @@ using LibComm::Log;
 #include "config.h"
 #include "filenamespec.h"
 
+#include <csignal>
+#include <cstdlib>
 #include <sys/time.h>
 #include <unistd.h>
 #include <array>
@@ -69,6 +73,7 @@ EventManager::EventManager(const char * name) :
     canProcessMessage(MSG_INDATA_IDX);
     canProcessMessage(MSG_TASK_RES_IDX); // TODO: Deprecate this for EvtMng in favour of DB
     canProcessMessage(MSG_MONIT_INFO_IDX);
+    canProcessMessage(MSG_CMD_IDX);
 
     setHeartBeatPeriod(0, 200000);
 }
@@ -150,7 +155,7 @@ void EventManager::execAdditonalLoopTasks()
 {
     // Check DirWatcher events from inbox folder
     DirWatcher::DirWatchEvent e;
-    if (dw->nextEvent(e)) {
+    while (dw->nextEvent(e)) {
         std::cout << e.path << "/" << e.name << (e.isDir ? " DIR " : " ") << e.mask << std::endl;
 
         // Process only files
@@ -207,10 +212,8 @@ void EventManager::execAdditonalLoopTasks()
         dbHdl->getICommand(selfPeer()->name, cmdId, cmdSource, cmdContent);
 
         if (cmdContent == "QUIT") {
-            InfoMsg("Requesting STOP to all components. . .");
-            PeerMessage * msg = buildPeerMsg(selfPeer()->name, "Please, shut down!", MSG_STOP);
-            registerMsg(selfPeer()->name, *msg);
-            setTransmissionToPeer(selfPeer()->name, msg);
+            InfoMsg("Leaving OPERATIONAL state triggered by an iCommand...");
+            transitTo(RUNNING);
             // Mark command as executed
             dbHdl->markICommandAsDone(cmdId);
         } else if (cmdContent == "PING") {
@@ -219,7 +222,6 @@ void EventManager::execAdditonalLoopTasks()
             // Add answer command
             dbHdl->addICommand(cmdSource, selfPeer()->name, "PONG");
         }
-
     } catch (RuntimeException & e) {
         ErrMsg(e.what());
         return;
@@ -267,16 +269,22 @@ void EventManager::processTASK_RES()
     // TODO: Remove this connection, make TaskRes available to QPFHMI through DB
     // Send a TaskResMsg to the HMI
     Message_TASK_RES * msg = dynamic_cast<Message_TASK_RES *>(msgData.msg);
-/*
-    MessageData msgToHMI(new Message_TASK_RES);
-    msgToHMI.msg->setData(msg->getData());
-    setForwardTo("QPFHMI", msgToHMI.msg->header);
-    PeerMessage * msgForHMI = buildPeerMsg(msgToHMI.msg->header.destination,
-                                           msgToHMI.msg->getDataString(),
-                                           MSG_TASK_RES);
-    registerMsg(selfPeer()->name, *msgForHMI);
-    setTransmissionToPeer("QPFHMI", msgForHMI);
-*/
+
+    std::unique_ptr<DBHandler> dbHdl(new DBHdlPostgreSQL);
+    try {
+        // Check that connection with the DB is possible
+        dbHdl->openConnection();
+        if (!dbHdl->updateTask(msg->task)) {
+            WarnMsg("Could not update task information in DB for task " +
+                    msg->task.taskData["NameExtended"].asString());
+        }
+    } catch (...) {
+        ErrMsg("Error when trying to update db info of task " +
+                msg->task.taskData["NameExtended"].asString());
+    }
+    // Check that connection with the DB is possible
+    dbHdl->closeConnection();
+
     if (msg->task.taskData["State"]["Progress"].asString() == "100") {
         InfoMsg("RECEIVED NOTIFICATION OF TASK " + msg->task.taskName +
                 " FINISHED AT " + msg->task.taskEnd);
@@ -289,6 +297,36 @@ void EventManager::processTASK_RES()
 //----------------------------------------------------------------------
 void EventManager::processMONIT_INFO()
 {
+    Message_MONIT_INFO * msg = dynamic_cast<Message_MONIT_INFO *>(msgData.msg);
+
+    NodeName & source = msg->header.source;
+    PList & v = msg->variables.paramList;
+
+    for (auto & it : v) {
+        if (it.first == "state") {
+            DbgMsg("STATUS of " + source + " is " + it.second);
+        }
+    }
+}
+
+//----------------------------------------------------------------------
+// Method: processCMD
+//----------------------------------------------------------------------
+void EventManager::processCMD()
+{
+    InfoMsg("Processing CMD message...");
+
+    Message_CMD * msg = dynamic_cast<Message_CMD *>(msgData.msg);
+
+    NodeName & source = msg->header.source;
+    PList & v = msg->variables.paramList;
+
+    for (auto & it : v) {
+        if (it.first == "quit") {
+            InfoMsg("Leaving OPERATIONAL state triggered by a CMD message...");
+            transitTo(RUNNING);
+        }
+    }
 }
 
 }

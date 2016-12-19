@@ -1,3 +1,43 @@
+/******************************************************************************
+ * File:    mainwindow.h
+ *          Declaration of class MainWindow
+ *
+ * Domain:  QPF.qpfgui.mainwindow
+ *
+ * Version:  1.1
+ *
+ * Date:    2016-11-03
+ *
+ * Author:   J C Gonzalez
+ *
+ * Copyright (C) 2015,2016 Euclid SOC Team @ ESAC
+ *_____________________________________________________________________________
+ *
+ * Topic: General Information
+ *
+ * Purpose:
+ *   Declaration of class MainWindow
+ *
+ * Created by:
+ *   J C Gonzalez
+ *
+ * Status:
+ *   Prototype
+ *
+ * Dependencies:
+ *   none
+ *
+ * Files read / modified:
+ *   none
+ *
+ * History:
+ *   See <ChangeLog>
+ *
+ * About: License Conditions
+ *   See <License>
+ *
+ ******************************************************************************/
+
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
@@ -74,6 +114,7 @@ public slots:
     void setAutomaticUpdateLocalArchModel(bool b);
 
 private slots:
+    void processPath();
     void saveAs();
     void cut();
     void copy();
@@ -113,8 +154,7 @@ private slots:
     void showTaskMonitContextMenu(const QPoint & p);
     void showWorkDir();
     void displayTaskInfo();
-    void pauseTask();
-    void resumeTask();
+    void restartTask();
     void stopTask();
     bool runDockerCmd(QModelIndex idx, QString cmd);
     void dumpTaskInfoToTree(QString taskName, const Json::Value & v, QTreeWidget * t);
@@ -157,6 +197,10 @@ private:
     void putUserToolsToSettings();
     TextView *activeTextView();
     void switchLayoutDirection();
+
+    void processProductsInPath(QString folder);
+    void getProductsInFolder(QString & path, QStringList & files, bool recursive = true);
+
     void init();
     void setLogWatch();
     void handleFinishedHMI();
@@ -199,7 +243,12 @@ private:
     QToolBar *fileToolBar;
     QToolBar *editToolBar;
 
+    QAction *processPathAct;
     QAction *saveAsAct;
+
+    QAction *stopTaskAct;
+    QAction *restartTaskAct;
+
     QAction *restartAct;
     QAction *quitAct;
     QAction *quitAllAct;
@@ -217,7 +266,7 @@ private:
 
     QAction *acDefault;
     QAction *acReprocess;
-    
+
     QAction *navigAct;
     QAction *closeAct;
     QAction *closeAllAct;
@@ -243,8 +292,7 @@ private:
     bool isThereActiveCores;
 
     HMIProxy * hmiNode;
-    std::thread hmiPxyThread;
-
+    
     QString  fileInDataParams;
     QTimer * taskMonitTimer;
 
@@ -252,8 +300,7 @@ private:
 
     QAction * acWorkDir;
     QAction * acShowTaskInfo;
-    QAction * acPauseTask;
-    QAction * acResumeTask;
+    QAction * acRestartTask;
     QAction * acStopTask;
 
     QAction * acShowMsgInfo;

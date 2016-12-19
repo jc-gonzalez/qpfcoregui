@@ -4,11 +4,13 @@
  *
  * Domain:  QPF.libQPF.dbhdlpostgre
  *
- * Version: 1.0
+ * Version:  1.1
  *
  * Date:    2015/07/01
  *
- * Copyright (C) 2015 J C Gonzalez
+ * Author:   J C Gonzalez
+ *
+ * Copyright (C) 2015,2016 Euclid SOC Team @ ESAC
  *_____________________________________________________________________________
  *
  * Topic: General Information
@@ -383,9 +385,9 @@ bool DBHdlPostgreSQL::storeState(std::string session, std::string node, std::str
 
     std::string registrationTime(tagToTimestamp(preciseTimeTag()));
     std::string cmd("INSERT INTO qpfstates (timestmp, sessionname, nodename, state) VALUES (" +
-                    str::quoted(registrationTime) + ", " + 
-                    str::quoted(session) + ", " + 
-                    str::quoted(node) + ", " + 
+                    str::quoted(registrationTime) + ", " +
+                    str::quoted(session) + ", " +
+                    str::quoted(node) + ", " +
                     str::quoted(newState) + ");");
 
     try { result = runCmd(cmd); } catch(...) { throw; }
@@ -404,7 +406,7 @@ std::vector< std::vector<std::string> > DBHdlPostgreSQL::getCurrentState(std::st
     bool result = true;
     std::vector< std::vector<std::string> > table;
 
-    std::string cmd("SELECT nodename, state FROM qpfstates " 
+    std::string cmd("SELECT nodename, state FROM qpfstates "
                     "WHERE sessionname = " + str::quoted(session) +
                     "ORDER BY qpfstate_id;");
     try {
@@ -427,13 +429,13 @@ std::pair<std::string, std::string> DBHdlPostgreSQL::getLatestState()
     bool result = true;
     std::pair<std::string, std::string> p;
 
-    std::string cmd("SELECT sessionname, state FROM qpfstates " 
+    std::string cmd("SELECT sessionname, state FROM qpfstates "
                     "WHERE nodename = 'EvtMng' "
                     "ORDER BY qpfstate_id DESC LIMIT 1;");
     try {
         result = runCmd(cmd);
         if (result) {
-            p.first   = std::string(PQgetvalue(res, 0, 0)); 
+            p.first   = std::string(PQgetvalue(res, 0, 0));
             p.second  = std::string(PQgetvalue(res, 0, 1));
         }
     } catch(...) {
@@ -457,9 +459,9 @@ void DBHdlPostgreSQL::addICommand(std::string target,
     std::string registrationTime(tagToTimestamp(preciseTimeTag()));
     std::string cmd("INSERT INTO icommands "
                     "(cmd_date, cmd_source, cmd_target, cmd_executed, cmd_content) "
-                    "VALUES (" + str::quoted(registrationTime) + 
-                    ", " + str::quoted(source) + 
-                    ", " + str::quoted(target) + 
+                    "VALUES (" + str::quoted(registrationTime) +
+                    ", " + str::quoted(source) +
+                    ", " + str::quoted(target) +
                     ", false, " + str::quoted(content) + ");");
     try {
         result = runCmd(cmd);
@@ -493,7 +495,7 @@ bool DBHdlPostgreSQL::getICommand(std::string target,
         result = runCmd(cmd);
         result &= (PQntuples(res) > 0);
         if (result) {
-            id      = atoi(PQgetvalue(res, 0, 0)); 
+            id      = atoi(PQgetvalue(res, 0, 0));
             source  = std::string(PQgetvalue(res, 0, 1));
             content = std::string(PQgetvalue(res, 0, 2));
         }

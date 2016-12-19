@@ -4,11 +4,13 @@
  *
  * Domain:  QPF.libQPF.DirWatcher
  *
- * Version: 1.0
+ * Version:  1.1
  *
  * Date:    2016/06/01
  *
- * Copyright (C) 2016 J C Gonzalez
+ * Author:   J C Gonzalez
+ *
+ * Copyright (C) 2015,2016 Euclid SOC Team @ ESAC
  *_____________________________________________________________________________
  *
  * Topic: General Information
@@ -175,12 +177,15 @@ void DirWatcher::start()
                         dwe.size = -1;
                     }
 
-                    bool proceed = true;
-                    if (events.size() > 0) {
-                        proceed = events.back().path != dwe.path;
-                    }
+//                    bool proceed = true;
+//                    if (events.size() > 0) {
+//                        proceed = events.back().path != dwe.path;
+//                    }
 
-                    if (proceed) { events.push(dwe); }
+//                    if (proceed) { 
+                        fprintf(stderr, "Storing event for %s\n", (dwe.path + "/" + dwe.name).c_str());
+                        events.push(dwe); 
+//                    }
                 }
             }
 

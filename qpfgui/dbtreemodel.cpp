@@ -4,11 +4,13 @@
  *
  * Domain:  QPF.libQPF.dbtreemodel
  *
- * Version: 1.0
+ * Version:  1.1
  *
  * Date:    2015/07/01
  *
- * Copyright (C) 2015 J C Gonzalez
+ * Author:   J C Gonzalez
+ *
+ * Copyright (C) 2015,2016 Euclid SOC Team @ ESAC
  *_____________________________________________________________________________
  *
  * Topic: General Information
@@ -43,14 +45,14 @@
 
 namespace QPF {
 
-DBTreeBoldHeaderDelegate::DBTreeBoldHeaderDelegate(QObject *parent) 
-        : QStyledItemDelegate(parent) 
+DBTreeBoldHeaderDelegate::DBTreeBoldHeaderDelegate(QObject *parent)
+        : QStyledItemDelegate(parent)
 {
 }
 
-void DBTreeBoldHeaderDelegate::paint(QPainter* painter, 
-                                     const QStyleOptionViewItem& option, 
-                                     const QModelIndex& index) const 
+void DBTreeBoldHeaderDelegate::paint(QPainter* painter,
+                                     const QStyleOptionViewItem& option,
+                                     const QModelIndex& index) const
 {
     QStyleOptionViewItem opt = option;
     initStyleOption(&opt, index);
@@ -107,7 +109,7 @@ void DBTreeModel::execQuery(QString & qry, QSqlDatabase & db)
     QSqlQuery q(qry, db);
     QSqlRecord rec = q.record();
     int fldCount = rec.count();
-    
+
     if (q.size() == rowsFromQuery) { return; }
 
     clear();
@@ -133,8 +135,8 @@ void DBTreeModel::execQuery(QString & qry, QSqlDatabase & db)
             prevGrp = grp;
         }
         row.clear();
-        for (int i = skippedColumns; i < fldCount; ++i) { 
-            row << new QStandardItem(q.value(i).toString()); 
+        for (int i = skippedColumns; i < fldCount; ++i) {
+            row << new QStandardItem(q.value(i).toString());
         }
         parent->appendRow(row);
 #else
@@ -143,15 +145,15 @@ void DBTreeModel::execQuery(QString & qry, QSqlDatabase & db)
         if (prevGrp != grp) {
             parent = new QStandardItem(q.value(skippedColumns).toString());
             row << parent;
-            for (int i = skippedColumns + 1; i < fldCount; ++i) { 
-                row << new QStandardItem(q.value(i).toString()); 
+            for (int i = skippedColumns + 1; i < fldCount; ++i) {
+                row << new QStandardItem(q.value(i).toString());
             }
             root->appendRow(row);
             children = 0;
             prevGrp = grp;
         } else {
-            for (int i = skippedColumns; i < fldCount; ++i) { 
-                row << new QStandardItem(q.value(i).toString()); 
+            for (int i = skippedColumns; i < fldCount; ++i) {
+                row << new QStandardItem(q.value(i).toString());
             }
             parent->appendRow(row);
         }

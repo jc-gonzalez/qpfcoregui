@@ -4,11 +4,13 @@
  *
  * Domain:  QPF.libQPF.config
  *
- * Version: 1.0
+ * Version:  1.1
  *
  * Date:    2015/07/01
  *
- * Copyright (C) 2015 J C Gonzalez
+ * Author:   J C Gonzalez
+ *
+ * Copyright (C) 2015,2016 Euclid SOC Team @ ESAC
  *_____________________________________________________________________________
  *
  * Topic: General Information
@@ -118,7 +120,7 @@ void Configuration::init(std::string fName)
                   << DBName << std::endl;
         fName = ""; // clear filename, to read from DB
     }
-    if (! fName.empty()) {
+    if (! fName.empty()) {        
         setConfigFile(fName);
         readConfigurationFromFile();
         saveConfigurationToDB();
@@ -160,7 +162,7 @@ void Configuration::getGeneralInfo(std::string & appName, std::string & appVer, 
     }
 
     ConfigurationInfo::data().session = sessionId;
-    
+
     PATHBin     = PATHRun + "/bin";
     PATHSession = PATHRun + "/" + sessionId;
     PATHLog     = PATHSession + "/log";
@@ -651,7 +653,7 @@ void Configuration::processConfiguration()
     cfgInfo.currentMachine = getEnvVar("HOSTNAME");
     cfgInfo.currentUser    = getEnvVar("USER");
     cfgInfo.cfgFileName    = cfgFileName;
-  
+
     // General
     getGeneralInfo(cfgInfo.appName, cfgInfo.appVersion, cfgInfo.lastAccess);
 
@@ -793,6 +795,8 @@ void Configuration::processConfiguration()
     std::vector<std::string> & machineNodes =
             cfgInfo.machineNodes[cfgInfo.currentMachine];
 
+    SHW("Creating connections:\n");
+
     for (unsigned int i = 0; i < machineNodes.size(); ++i) {
 
         Peer * peer = cfgInfo.peersCfgByName[machineNodes.at(i)];
@@ -803,18 +807,20 @@ void Configuration::processConfiguration()
         if (component == 0) { continue; }
 
         component->addPeer(cfgInfo.peersCfgByName[peerName], true);
-        DBG("Creating connections for " << peerName
-            << "  [" << peer->clientAddr
-            << " ; " << peer->serverAddr << "]");
-
+        //DBG("Creating connections for " << peerName
+        //    << "  [" << peer->clientAddr
+        //    << " ; " << peer->serverAddr << "]");
+        SHW("* " << peerName << " [" << peer->clientAddr << "] <==>\n");
+        
         std::vector<std::string> & connectNodes = cfgInfo.connections[peerName];
 
         for (unsigned int j = 0; j < connectNodes.size(); ++j) {
             Peer * otherPeer = cfgInfo.peersCfgByName[connectNodes.at(j)];
             component->addPeer(otherPeer);
-            DBG("  Connecting to " << otherPeer->name
-                << "  [" << otherPeer->clientAddr
-                << " ; " << otherPeer->serverAddr << "]");
+            //DBG("  Connecting to " << otherPeer->name
+            //    << "  [" << otherPeer->clientAddr
+            //    << " ; " << otherPeer->serverAddr << "]");
+            SHW("\t\t* " << otherPeer->name << " [" << otherPeer->clientAddr << "]\n");
         }
 
         cfgInfo.peerNodes.push_back(component);

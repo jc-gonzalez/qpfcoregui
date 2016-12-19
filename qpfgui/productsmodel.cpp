@@ -4,11 +4,13 @@
  *
  * Domain:  QPF.libQPF.productsmodel
  *
- * Version: 1.0
+ * Version:  1.1
  *
  * Date:    2015/07/01
  *
- * Copyright (C) 2015 J C Gonzalez
+ * Author:   J C Gonzalez
+ *
+ * Copyright (C) 2015,2016 Euclid SOC Team @ ESAC
  *_____________________________________________________________________________
  *
  * Topic: General Information
@@ -64,13 +66,13 @@ ProductsModel::ProductsModel()
                 "                p.signature, '.',  "
                 "                right(concat('00000000000000000000', p.ID), 20)),"
                 "                p.registration_time;");
-    defineHeaders({//"Signature", 
+    defineHeaders({//"Signature",
                    "Product Id", "Type", "Version",
                    "Size", "Status", "Creator", "Obs.Mode",
                    "Start", "End", "Reg.Time", "URL"});
-                   
+
     skipColumns(1);
-                   
+
     refresh();
 }
 

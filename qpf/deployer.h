@@ -4,11 +4,13 @@
  *
  * Domain:  QPF.QPF.Deployer
  *
- * Version: 1.0.1
+ * Version:  1.1
  *
  * Date:    2015/07/01
  *
- * Copyright (C) 2015 J C Gonzalez
+ * Author:   J C Gonzalez
+ *
+ * Copyright (C) 2015,2016 Euclid SOC Team @ ESAC
  *_____________________________________________________________________________
  *
  * Topic: General Information
@@ -133,6 +135,12 @@ public:
     //----------------------------------------------------------------------
     Configuration * getConfigHandler();
 
+    //----------------------------------------------------------------------
+    // Method: actionOnSigInt
+    // Actions to be performed when capturing SigInt
+    //----------------------------------------------------------------------
+    void actionOnSigInt();
+
 private:
 
     //----------------------------------------------------------------------
@@ -202,6 +210,12 @@ private:
     // Removes old log and msg files
     //----------------------------------------------------------------------
     bool existsDir(std::string pathName);
+
+    //----------------------------------------------------------------------
+    // Method: installSignalHandlers
+    // Install signal handlers
+    //----------------------------------------------------------------------
+    void installSignalHandlers();
 
 private:
 
@@ -278,6 +292,13 @@ private:
     // Set to TRUE when the deployment (launch of nodes) is finished
     //----------------------------------------------------------------------
     bool deploymentCompleted;
+
+    //----------------------------------------------------------------------
+    // Variable: sigIntHandler
+    // Standard structure for signal handling
+    //----------------------------------------------------------------------
+    struct sigaction sigIntHandler;
+
 };
 
 }

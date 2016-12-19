@@ -4,11 +4,13 @@
  *
  * Domain:  QPF.QPF.Deployer
  *
- * Version: 1.0.1
+ * Version:  1.1
  *
  * Date:    2015/07/01
  *
- * Copyright (C) 2015 J C Gonzalez
+ * Author:   J C Gonzalez
+ *
+ * Copyright (C) 2015,2016 Euclid SOC Team @ ESAC
  *_____________________________________________________________________________
  *
  * Topic: General Information
@@ -55,6 +57,23 @@
 ////////////////////////////////////////////////////////////////////////////
 namespace QPF {
 
+#include <signal.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+Deployer * deployerCatcher;
+
+//----------------------------------------------------------------------
+// Ancillary signal handler
+//----------------------------------------------------------------------
+void signalCatcher(int s) 
+{
+    deployerCatcher->actionOnSigInt();
+}
+
 //----------------------------------------------------------------------
 // Constructor: Deployer
 //----------------------------------------------------------------------
@@ -72,12 +91,16 @@ Deployer::Deployer(int argc, char *argv[]) :
     hmiNeeded(false),
     deploymentCompleted(false)
 {
-    // Change value for delay between peer nodes launches (default: 50000us)
+    //== Change value for delay between peer nodes launches (default: 50000us)
     if (!processCmdLineOpts(argc, argv)) { exit(EXIT_FAILURE); }
 
-    //===== Read Configuration =====
+    //== Read Configuration 
     if (!newConfigFile.empty()) { configFile = newConfigFile.c_str(); }
     readConfig(configFile);
+    
+    //== Install signal handler
+    deployerCatcher = this;
+    installSignalHandlers();
 }
 
 //----------------------------------------------------------------------
@@ -173,13 +196,21 @@ bool Deployer::processCmdLineOpts(int argc, char * argv[])
 //----------------------------------------------------------------------
 void Deployer::readConfig(const char * configFile)
 {
+    // Check if the config file passed (if an actual file) does exits
+    if (strncmp(configFile, "db://", 5) != 0) {
+        struct stat fst;
+        if (stat(configFile, &fst) != 0) {
+            char msg[256];
+            sprintf(msg, "Trying to open config. file %s", configFile);
+            std::perror(msg);
+            exit(EXIT_FAILURE);            
+        }
+    }
+
     cfg   = new Configuration(configFile);
     ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
 
     hmiNeeded = cfgInfo.hmiPresent;
-
-    // std::cerr << Configuration::PATHBase << std::endl;
-    // std::cerr << Configuration::PATHBin << std::endl;
 
     // Ensure paths for the execution are available and readu
     assert(existsDir(Configuration::PATHBase));
@@ -333,5 +364,26 @@ bool Deployer::existsDir(std::string pathName)
     return (stat(pathName.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode));
 }
 
+//----------------------------------------------------------------------
+// Method: actionOnSigInt
+// Actions to be performed when capturing SigInt
+//----------------------------------------------------------------------
+void Deployer::actionOnSigInt()
+{
+    evtMng->transitTo(LibComm::CommNode::RUNNING);
+}
+
+//----------------------------------------------------------------------
+// Method: installSignalHandlers
+// Install signal handlers
+//----------------------------------------------------------------------
+void Deployer::installSignalHandlers()
+{
+   sigIntHandler.sa_handler = signalCatcher;
+   sigemptyset(&sigIntHandler.sa_mask);
+   sigIntHandler.sa_flags = 0;
+
+   sigaction(SIGINT, &sigIntHandler, NULL);
+}
 
 }

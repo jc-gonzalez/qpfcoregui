@@ -4,11 +4,13 @@
  *
  * Domain:  QPF.libQPF.dbmng
  *
- * Version: 1.0
+ * Version:  1.1
  *
  * Date:    2015/07/01
  *
- * Copyright (C) 2015 J C Gonzalez
+ * Author:   J C Gonzalez
+ *
+ * Copyright (C) 2015,2016 Euclid SOC Team @ ESAC
  *_____________________________________________________________________________
  *
  * Topic: General Information
@@ -61,10 +63,10 @@ DBManager::~DBManager()
 void DBManager::close()
 {
     QStringList cnctNames = db.connectionNames();
-    
+
     db.close();
     db = QSqlDatabase();
-    foreach (QString cnctName, cnctNames) {       
+    foreach (QString cnctName, cnctNames) {
         db.removeDatabase(cnctName);
     }
 }
@@ -125,7 +127,7 @@ void DBManager::setState(QString newState)
     QDateTime now(QDateTime::currentDateTime());
     QDateTime nowUTC(now);
     nowUTC.setTimeSpec(Qt::UTC);
-    
+
     QString sqry(QString("INSERT INTO qpfstates (timestmp, state) VALUES ('%1', '%2');")
                  .arg(nowUTC.toString(Qt::ISODate))
                  .arg(newState));
@@ -139,7 +141,7 @@ void DBManager::setState(QString newState)
 
 QMap<QString,QString> DBManager::getCurrentStates(QString session)
 {
-    QSqlQuery qry(QString("SELECT nodename, state FROM qpfstates " 
+    QSqlQuery qry(QString("SELECT nodename, state FROM qpfstates "
                           "WHERE sessionname = '%1' "
                           "ORDER BY qpfstate_id;").arg(session), db);
     QMap<QString,QString> result;
@@ -168,7 +170,7 @@ void DBManager::addICommand(QString cmd)
     QDateTime now(QDateTime::currentDateTime());
     QDateTime nowUTC(now);
     nowUTC.setTimeSpec(Qt::UTC);
-    
+
     QString sqry(QString("INSERT INTO icommands "
                          "(cmd_date, cmd_source, cmd_target, cmd_executed, cmd_content) "
                          "VALUES ('%1', '%2', '%3', false, '%4');")
@@ -208,7 +210,7 @@ bool DBManager::getICommand(QString cmd, bool removeCmd)
             // Deactivate answer, so it doesn't get used again
             QSqlQuery qry2(QString("UPDATE icommands SET cmd_executed = true "
                                    " WHERE id = %1;").arg(id), db);
-        } 
+        }
     } else if (qry.lastError().type() != QSqlError::NoError) {
         qErrnoWarning(qPrintable(qry.lastError().nativeErrorCode() + ": " +
                                  qry.lastError().text()));
@@ -216,7 +218,7 @@ bool DBManager::getICommand(QString cmd, bool removeCmd)
     } else {
         result = false;
     }
-    
+
     return result;
 }
 

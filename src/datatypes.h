@@ -4,11 +4,13 @@
  *
  * Domain:  QPF.libQPF.datatypes
  *
- * Version: 1.0
+ * Version:  1.1
  *
  * Date:    2015/07/01
  *
- * Copyright (C) 2015 J C Gonzalez
+ * Author:   J C Gonzalez
+ *
+ * Copyright (C) 2015,2016 Euclid SOC Team @ ESAC
  *_____________________________________________________________________________
  *
  * Topic: General Information
@@ -165,8 +167,10 @@ struct StringList : public JsonStruct {
 
 struct ProductShortList : public StringList {};
 
+typedef std::map<std::string, std::string> PList;
+
 struct ParameterList : public JsonStruct {
-    std::map<std::string, std::string> paramList;
+    PList paramList;
 
     virtual void toFields();
     virtual void toData();

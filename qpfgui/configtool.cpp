@@ -4,11 +4,13 @@
  *
  * Domain:  QPF.qpfgui.configtool
  *
- * Version: 1.0
+ * Version:  1.1
  *
  * Date:    2015/09/01
  *
- * Copyright (C) 2015, 2016 J C Gonzalez
+ * Author:   J C Gonzalez
+ *
+ * Copyright (C) 2015,2016 Euclid SOC Team @ ESAC
  *_____________________________________________________________________________
  *
  * Topic: General Information
@@ -229,7 +231,7 @@ void ConfigTool::prepare(MapOfUserDefTools & userTools, QStringList pts)
     std::cerr << cfgDataBackup << std::endl;
 
     // Place config data in dialog
-    transferCfgToGUI();  
+    transferCfgToGUI();
     initExtTools(userTools, pts);
 }
 
@@ -285,7 +287,7 @@ void ConfigTool::save()
         int ret = QMessageBox::question(this, tr("Save"),
                     tr("Do you want to overwrite the configuration file \"") +
                     fileName + QString("\"?"),
-                    QMessageBox::Yes | QMessageBox::No, 
+                    QMessageBox::Yes | QMessageBox::No,
                     QMessageBox::No);
         if (ret == QMessageBox::Yes) {
             saveAsFilename(fileName);
@@ -305,7 +307,7 @@ void ConfigTool::saveAs()
 
     QFileInfo fs(QString::fromStdString(cfgInfo.cfgFileName));
     QString filter("*.json");
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save As"), 
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save As"),
             fs.absolutePath(), filter);
     if (! fileName.isEmpty()) {
         saveAsFilename(fileName);
@@ -319,7 +321,7 @@ void ConfigTool::saveAs()
 void ConfigTool::saveAsFilename(QString & fName)
 {
     if (! fName.isEmpty()) {
-        transferGUIToCfg();   
+        transferGUIToCfg();
         QString cfgJsonContent(ConfigurationInfo::data().toJSONString().c_str());
         QFile file( fName );
         if (file.open(QIODevice::ReadWrite)) {
@@ -762,7 +764,7 @@ void ConfigTool::transferCfgToGUI()
 //----------------------------------------------------------------------
 void ConfigTool::transferGUIToCfg()
 {
-    
+
     // 7. FLAGS
     transferFlagsFromGUIToCfg();
 }

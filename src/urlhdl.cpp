@@ -4,11 +4,13 @@
  *
  * Domain:  QPF.libQPF.urlhdl
  *
- * Version: 1.0
+ * Version:  1.1
  *
  * Date:    2015/07/01
  *
- * Copyright (C) 2015 J C Gonzalez
+ * Author:   J C Gonzalez
+ *
+ * Copyright (C) 2015,2016 Euclid SOC Team @ ESAC
  *_____________________________________________________________________________
  *
  * Topic: General Information
@@ -231,7 +233,12 @@ ProductMetadata & URLHandler::fromGateway2Processing()
                     cfgInfo.storage.gateway.path + section,
                     taskExchgDir + section);
 
-    (void)relocate(file, newFile, MOVE); //isRemote ? COPY_TO_REMOTE : LINK);
+    if (isRemote) {
+        (void)relocate(file, newFile, COPY_TO_REMOTE);
+        unlink(file.c_str());
+    } else {
+        (void)relocate(file, newFile, MOVE);
+    }
 
     // Change url in processing task
     product.url = newUrl;
@@ -258,7 +265,7 @@ ProductMetadata & URLHandler::fromProcessing2Gateway()
 
     // Get extension
     std::string extension = str::mid(file,file.find_last_of('.') + 1);
-    std::string subdir = (extension == "log") ? "/log" : "/out";
+    std::string subdir = "/out"; //(extension == "log") ? "/log" : "/out";
 
     std::string section("/out");
 
@@ -269,9 +276,12 @@ ProductMetadata & URLHandler::fromProcessing2Gateway()
                     taskExchgDir + subdir,
                     cfgInfo.storage.gateway.path + section);
 
-    DBG("Trying to change URL from " << product.url << " to " << newUrl);
-
-    (void)relocate(file, newFile, isRemote ? COPY_TO_MASTER : MOVE);
+    if (isRemote) {
+        (void)relocate(file, newFile, COPY_TO_MASTER);
+        runlink(file);
+    } else {
+        (void)relocate(file, newFile, LINK);
+    }
 
     // Change url in processing task
     product.url = newUrl;
@@ -281,7 +291,7 @@ ProductMetadata & URLHandler::fromProcessing2Gateway()
 }
 
 //----------------------------------------------------------------------
-// Method: fromGateway2Local
+// Method: fromGateway2LocalArch
 //----------------------------------------------------------------------
 ProductMetadata & URLHandler::fromGateway2LocalArch()
 {
@@ -306,7 +316,7 @@ ProductMetadata & URLHandler::fromGateway2LocalArch()
                     cfgInfo.storage.local_archive.path + section);
 
     // Set (hard) link
-    (void)relocate(file, newFile, COPY);  // should be LINK
+    (void)relocate(file, newFile, MOVE);
 
     // Change url in processing task
     product.url = newUrl;
@@ -402,6 +412,20 @@ int URLHandler::rcopyfile(std::string & sFrom, std::string & sTo,
     } else {
         cmd = scp + " " + sFrom + " " + master_address + ":" + sTo;
     }
+    DBG("CMD: " << cmd);
+    int res = system(cmd.c_str());
+    (void)(res);
+
+    return 0;
+}
+
+//----------------------------------------------------------------------
+// Method: runlink
+//----------------------------------------------------------------------
+int URLHandler::runlink(std::string & f)
+{
+    std::string cmd;
+    cmd = "ssh " + master_address + " rm " + f;
     DBG("CMD: " << cmd);
     int res = system(cmd.c_str());
     (void)(res);

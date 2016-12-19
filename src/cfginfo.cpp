@@ -4,11 +4,13 @@
  *
  * Domain:  QPF.libQPF.ConfigurationInfo
  *
- * Version: 1.0
+ * Version:  1.1
  *
  * Date:    2015/07/01
  *
- * Copyright (C) 2015 J C Gonzalez
+ * Author:   J C Gonzalez
+ *
+ * Copyright (C) 2015,2016 Euclid SOC Team @ ESAC
  *_____________________________________________________________________________
  *
  * Topic: General Information
@@ -67,7 +69,7 @@ void ConfigurationInfo::clear()
     machineNodes.clear();
 }
 
-ConfigurationInfo & ConfigurationInfo::data() 
+ConfigurationInfo & ConfigurationInfo::data()
 {
     static ConfigurationInfo cfgInfoInstance {};
     return cfgInfoInstance;
@@ -81,8 +83,8 @@ std::string ConfigurationInfo::toJSONString()
 
 #define C(x)  "\"" << x << "\""
 #define Cc(x) "\"" << x << "\","
-    
-    // START        
+
+    // START
     s << "{" << nl;
 
     // General section
@@ -92,7 +94,7 @@ std::string ConfigurationInfo::toJSONString()
     << i4 << i4 << "\"last_access\": " << Cc(lastAccess) << nl
     << i4 << i4 << "\"run_path\": " << C(storage.run) << nl
     << i4 << "}," << nl;
-    
+
     // Nodes
     s << i4 << "\"nodes\": {" << nl
     << i4 << i4 << "\"hmi_node\": " << Cc(qpfhmiCfg.name) << nl
@@ -158,7 +160,7 @@ std::string ConfigurationInfo::toJSONString()
     << i4 << i4 << "\"user\": " << Cc(Configuration::DBUser) << nl
     << i4 << i4 << "\"pwd\": " << C(Configuration::DBPwd) << nl
     << i4 << "}," << nl;
-    
+
     // Products
     s << i4 << "\"products\": {" << nl
     << i4 << i4 << "\"product_types\": [" << nl;
@@ -167,7 +169,7 @@ std::string ConfigurationInfo::toJSONString()
         for (int i = 0; i < n - 1; ++i) {
             s << i4 << i4 << i4 << Cc(orcParams.productTypes.at(i)) << nl;
         }
-        s << i4 << i4 << i4 << C(orcParams.productTypes.at(n - 1)) << nl;        
+        s << i4 << i4 << i4 << C(orcParams.productTypes.at(n - 1)) << nl;
     }
     s << i4 << i4 << " ]," << nl
     << i4 << i4 << "\"parsing_regex\": " << Cc(parsing_regex) << nl
@@ -177,7 +179,7 @@ std::string ConfigurationInfo::toJSONString()
     << i4 << i4 << "\"meta_ext\": " << Cc(meta_ext) << nl
     << i4 << i4 << "\"log_ext\": " << C(log_ext) << nl
     << i4 << "}," << nl;
-    
+
     // Orchestration
     s << i4 << "\"orchestration\": {" << nl
     << i4 << i4 << "\"rules\": {" << nl;
@@ -264,7 +266,7 @@ std::string ConfigurationInfo::toJSONString()
     << i4 << i4 << i4 << "\"path\": " << C(storage.outbox.path) << nl
     << i4 << i4 << "}" << nl
     << i4 << "}," << nl;
-    
+
     // User Defined Tools
     s << i4 << "\"userdeftools\": [" << nl;
     n = userDefTools.size();
@@ -300,7 +302,7 @@ std::string ConfigurationInfo::toJSONString()
         if (k == n) {
             s << ' ' << C(kv.first);
         } else {
-            s << ' ' << Cc(kv.first);           
+            s << ' ' << Cc(kv.first);
         }
     }
     s << " ]," << nl;
@@ -313,7 +315,7 @@ std::string ConfigurationInfo::toJSONString()
         if (k == n) {
             s << ' ' << C(kv.first);
         } else {
-            s << ' ' << Cc(kv.first);           
+            s << ' ' << Cc(kv.first);
         }
     }
     s << " ]," << nl;
@@ -323,33 +325,33 @@ std::string ConfigurationInfo::toJSONString()
     s << i4 << i4 << i4 << "\"group_task_agent_logs\": "
     << ((flags.monit.groupTaskAgentLogs) ? "true" : "false") << nl;
 
-    s << i4 << i4 << "}," << nl        
+    s << i4 << i4 << "}," << nl
     << i4 << i4 << "\"processing\": {" << nl;
-    
+
     s << i4 << i4 << i4 << "\"allow_reprocessing\": "
     << ((flags.proc.allowReprocessing) ? "true" : "false") << "," << nl;
     s << i4 << i4 << i4 << "\"intermediate_products\": "
     << ((flags.proc.intermedProducts) ? "true" : "false") << nl;
-    
+
     s << i4 << i4 << "}," << nl
     << i4 << i4 << "\"archiving\": {" << nl;
-    
+
     s << i4 << i4 << i4 << "\"send_outputs_to_main_archive\": "
     << ((flags.arch.sendOutputsToMainArchive) ? "true" : "false") << nl;
-    
+
     s << i4 << i4 << "}" << nl
-    << i4 << "}" << nl; 
+    << i4 << "}" << nl;
 
 
     s << "}" << nl;
     // END
-    
+
     return s.str();
 }
 
 void ConfigurationInfo::loadFromJSONString(std::string s)
 {
-   
+
 }
 
 void ConfigurationInfo::dump()

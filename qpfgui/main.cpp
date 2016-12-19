@@ -4,11 +4,13 @@
  *
  * Domain:  QPF.qpfgui.main
  *
- * Version: 1.0
+ * Version:  1.1
  *
  * Date:    2015/07/01
  *
- * Copyright (C) 2015,2016 J C Gonzalez
+ * Author:   J C Gonzalez
+ *
+ * Copyright (C) 2015,2016 Euclid SOC Team @ ESAC
  *_____________________________________________________________________________
  *
  * Topic: General Information
@@ -52,7 +54,7 @@
 static QString appName(APP_NAME " - " APP_LONG_NAME);
 static QString appRev("Release " APP_RELEASE " - " APP_DATE);
 static QString appBld(BUILD_ID);
-    
+
 //----------------------------------------------------------------------
 // Function: usage
 // Shows the command line to be used to call this application
@@ -78,13 +80,13 @@ void sayHello()
         char buf[20];
         sprintf(buf, "%ld", (long)(time(0)));
         buildId = std::string(buf);
-    } 
+    }
 
     std::string hline("----------------------------------------"
                       "--------------------------------------");
     std::cout << hline << std::endl
             << " " << APP_NAME << " - " << APP_LONG_NAME << std::endl
-            << " " << APP_DATE << " - " 
+            << " " << APP_DATE << " - "
             << APP_RELEASE << " Build " << buildId << std::endl
             << hline << std::endl << std::endl;
 }
@@ -102,9 +104,9 @@ void ctrlMsg(QSplashScreen & splash, int k = 0)
                       "Launching application window",
                       ""};
     static int i = 0;
-    
-    QString msgToShow = "<font color=\"yellow\"><b>" + appName + 
-                        "<br>" + appRev + "<br>" + appBld + "</b></font><br>" + 
+
+    QString msgToShow = "<font color=\"yellow\"><b>" + appName +
+                        "<br>" + appRev + "<br>" + appBld + "</b></font><br>" +
                         "<font color=\"white\">" + msgs[i] + "</font>";
     splash.showMessage(msgToShow, Qt::AlignLeft, Qt::white);
     qApp->processEvents(QEventLoop::AllEvents);
@@ -118,7 +120,7 @@ void ctrlMsg(QSplashScreen & splash, int k = 0)
 // and invokes the main window
 //----------------------------------------------------------------------
 int main(int argc, char *argv[])
-{    
+{
     QApplication a(argc, argv);
 
     QPixmap pixmap(":/img/EuclidQPF.png");
@@ -129,9 +131,9 @@ int main(int argc, char *argv[])
     const int & numOfArgs = args.count();
 
     sayHello();
-    
+
     ctrlMsg(splash);
-           
+
     QString configStr("");
     QString sessionStr("");
 
@@ -150,10 +152,10 @@ int main(int argc, char *argv[])
     if (configStr.isEmpty()) {
         usage();
     }
-    
+
     ctrlMsg(splash);
     QPF::MainWindow w(configStr, sessionStr);
-    w.setAppInfo(APP_NAME " - " APP_LONG_NAME, 
+    w.setAppInfo(APP_NAME " - " APP_LONG_NAME,
                  "V" APP_RELEASE " " APP_DATE,
                  BUILD_ID);
 
@@ -162,6 +164,6 @@ int main(int argc, char *argv[])
 
     ctrlMsg(splash);
     splash.finish(&w);
-            
+
     return a.exec();
 }
