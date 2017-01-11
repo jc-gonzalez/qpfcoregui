@@ -964,19 +964,27 @@ void MainWindow::processProductsInPath(QString folder)
     getProductsInFolder(folder, files);
 
     // Copy them (hard link, better) to the inbox
-    URLHandler uh;
     ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
     std::string inbox = cfgInfo.storage.inbox.path + "/";
 
+    URLHandler uh;
+    FileNameSpec fs;
+    ProductMetadata m;    
     foreach (const QString & fi, files) {
-        QFileInfo fs(fi);
-        std::string dirName  = fs.absolutePath().toStdString();
-        std::string fileName = fs.fileName().toStdString();
-        std::string origFile = dirName + "/" + fileName;
-        std::string newFile = inbox + fileName;
-        uh.relocate(origFile, newFile, LocalArchiveMethod::LINK);
+        fs.parseFileName(fi.toStdString(), m);
+        uh.setProduct(m);
+        m = uh.fromFolder2Inbox();
         //sleep(5);
     }
+//    foreach (const QString & fi, files) {
+//        QFileInfo fs(fi);
+//        std::string dirName  = fs.absolutePath().toStdString();
+//        std::string fileName = fs.fileName().toStdString();
+//        std::string origFile = dirName + "/" + fileName;
+//        std::string newFile = inbox + fileName;
+//        uh.relocate(origFile, newFile, LocalArchiveMethod::LINK);
+//        //sleep(5);
+//    }
 }
 
 //----------------------------------------------------------------------
@@ -1415,17 +1423,18 @@ void MainWindow::openWith()
     QString fileName = archUrl.path();
     QString args = udt.args;
     FileNameSpec fns;
-    FileNameSpec::FileNameComponents c = fns.parseFileName(fileName.toStdString());
+    ProductMetadata md;
+    fns.parseFileName(fileName.toStdString(), md);
     QFileInfo fs(fileName);
 
     args.replace("%f", fs.fileName());
     args.replace("%F", fileName);
     args.replace("%p", fs.absolutePath());
-    args.replace("%i", QString::fromStdString(c.productId));
-    args.replace("%o", QString::fromStdString(c.signature));
-    args.replace("%s", QString::fromStdString(c.dateStart));
-    args.replace("%e", QString::fromStdString(c.dateEnd));
-    args.replace("%t", QString::fromStdString(c.productType));
+    args.replace("%i", QString::fromStdString(md.productId));
+    args.replace("%o", QString::fromStdString(md.signature));
+    args.replace("%s", QString::fromStdString(md.startTime));
+    args.replace("%e", QString::fromStdString(md.endTime));
+    args.replace("%t", QString::fromStdString(md.productType));
     args.replace("%x", fs.suffix());
 
     // Count how many %n placeholders are
