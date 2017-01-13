@@ -688,4 +688,25 @@ bool DBHdlPostgreSQL::updTable(std::string table, std::string cond,
     return runCmd(cmd);
 }
 
+//----------------------------------------------------------------------
+// Method: getVersionCounter
+// Returns the process version counter for a given processor
+//----------------------------------------------------------------------
+int DBHdlPostgreSQL::getVersionCounter(std::string & procName)
+{
+    bool result;
+    std::string cmd("SELECT counter FROM pvc "
+                    "WHERE name LIKE " + 
+                    str::quoted(procName + "%") + " ORDER BY id "
+                    "DESC LIMIT 1;");
+
+    try { result = runCmd(cmd); } catch(...) { throw; }
+
+    int cnt = atoi(PQgetvalue(res, 0, 0));
+    PQclear(res);
+
+    return cnt;
+}
+
+
 }

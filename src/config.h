@@ -129,7 +129,8 @@ public:
     // Return processor parameters
     //----------------------------------------------------------------------
     void getProc(std::string & name, std::string & exe,
-                 std::string & in, std::string & out);
+                 std::string & in, std::string & out, 
+                 std::string & ver);
 
     //----------------------------------------------------------------------
     // Method: getNumNodes

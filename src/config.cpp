@@ -251,13 +251,15 @@ int Configuration::getNumProcs()
 // Return processor parameters
 //----------------------------------------------------------------------
 void Configuration::getProc(std::string & name, std::string & exe,
-                            std::string & in, std::string & out)
+                            std::string & in, std::string & out, 
+                            std::string & ver)
 {
     Json::Value const & v = (*procIt);
     name = v["name"].asString();
     exe  = v["exe_path"].asString();
     in   = v["input_path"].asString();
     out  = v["output_path"].asString();
+    ver  = v["version"].asString();
 
     procIt++;
     if (procIt == cfg["processing"]["processors"].end()) {
@@ -637,6 +639,13 @@ Component * Configuration::createNewComponent(ConfigurationInfo & cfgInfo,
 //----------------------------------------------------------------------
 void Configuration::processConfiguration()
 {
+    std::unique_ptr<DBHandler> dbHdl(new DBHdlPostgreSQL);
+    dbHdl->setDbHost(Configuration::DBHost);
+    dbHdl->setDbPort(Configuration::DBPort);
+    dbHdl->setDbName(Configuration::DBName);
+    dbHdl->setDbUser(Configuration::DBUser);
+    dbHdl->setDbPasswd(Configuration::DBPwd);
+
     ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
 
     Json::StyledWriter w;
@@ -684,11 +693,20 @@ void Configuration::processConfiguration()
     }
 
     // Processors
+    // Check that connection with the DB is possible
+    try {
+        dbHdl->openConnection();
+    } catch (RuntimeException & e) {
+        LibComm::Log::log("SYSTEM", Log::FATAL, e.what());
+        return;
+    }
     for (int i = 0; i < getNumProcs(); ++i) {
         Processor * pe = new Processor;
-        getProc(pe->name, pe->exePath, pe->inPath, pe->outPath);
+        getProc(pe->name, pe->exePath, pe->inPath, pe->outPath, pe->version);       
+        pe->counter = dbHdl->getVersionCounter(pe->name);               
         cfgInfo.orcParams.processors[pe->name] = pe;
     }
+    dbHdl->closeConnection();
 
     // Nodes
     for (int i = 0; i < getNumNodes(); ++i) {

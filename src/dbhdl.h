@@ -257,6 +257,12 @@ public:
     virtual bool fillWithResult(std::vector< std::vector<std::string> > & table)=0;
 
     //----------------------------------------------------------------------
+    // Method: getVersionCounter
+    // Returns the process version counter for a given processor
+    //----------------------------------------------------------------------
+    virtual int getVersionCounter(std::string & procName)=0;
+    
+    //----------------------------------------------------------------------
     // Method: updateTable<T>
     // Template method to update a single field of a table
     //----------------------------------------------------------------------
