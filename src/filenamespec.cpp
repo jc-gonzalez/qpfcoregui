@@ -123,7 +123,7 @@ void FileNameSpec::setAssignations(std::string assign)
     while (std::getline(ss, a, ';')) {
         if ((a.at(0) == '%') && (a.at(2) == '=')) {
             assignationsTpl[a.at(1)] = a.substr(3);
-            str::replaceAll(assignationsTpl[a.at(1)], "+", "");
+            str::replaceAll(assignationsTpl[a.at(1)], "+", "");            
             sexp.clear();
             std::string numStr(a.substr(3));
             std::stringstream sss(str::replaceAll(numStr, "%", ""));
@@ -133,7 +133,7 @@ void FileNameSpec::setAssignations(std::string assign)
                 ssss >> n;
                 if (n > 0) sexp.insert(n);
             }
-            assignations[a.at(1)] = sexp;
+            assignations[a.at(1)] = sexp;            
         }
     }
 }
@@ -169,7 +169,7 @@ bool FileNameSpec::parseFileName(std::string fileName,
     std::vector<std::string> mre;
     if (re->match(baseName)) { re->get(mre); }
 #endif
-
+    
     // Split name in dot '.' separated sections
     std::vector<std::string> baseExt;
     str::split(baseName, '.', baseExt);
@@ -236,7 +236,8 @@ bool FileNameSpec::parseFileName(std::string fileName,
                     placeIn(m.productType,  tpl, idx, fld);
                     break;
                 case 'v':
-                    if (fld.length() < 5) { fld = "01.00"; }
+                    m.hadNoVersion = (fld.length() < 5);
+                    if (m.hadNoVersion) { fld = "01.00"; }                    
                     placeIn(m.productVersion, tpl, idx, fld);
                     break;
                 case 'D':
@@ -291,32 +292,32 @@ void FileNameSpec::decodeSignature(ProductMetadata & m)
     std::string obsId, expos;
     
     if ((m.procFunc == "SOC") || (m.procFunc == "HK")) {
-        // Instrument-ObsId-Exposure-ObsMode
+        // Instrument-ObsMode-ObsId-Exposure
         if (nParts < 4) { return; }
         m.origin     = m.procFunc;
         m.instrument = signParts[0];
         m.productType = m.procFunc + "_" + m.instrument;
-        obsId        = signParts[1];
-        expos        = signParts[2];
-        m.obsMode    = signParts[3];
+        m.obsMode    = signParts[1];
+        obsId        = signParts[2];
+        expos        = signParts[3];
     } else if ((m.procFunc == "SIM") || (m.procFunc == "LE1")) {
-        // Instrument-ObsId-Exposure-ObsMode
+        // Instrument-ObsMode-ObsId-Exposure
         if (nParts < 4) { return; }
         m.origin     = m.procFunc;
         m.instrument = signParts[0];
         m.productType = m.procFunc + "_" + m.instrument;
-        obsId        = signParts[1];
-        expos        = signParts[2];
-        m.obsMode    = signParts[3];
+        m.obsMode    = signParts[1];
+        obsId        = signParts[2];
+        expos        = signParts[3];
     } else if (m.procFunc == "QLA") {
-        // OrigProcFunc-Instrument-ObsId-Exposure-ObsMode
+        // OrigProcFunc-Instrument-ObsMode-ObsId-Exposure
         if (nParts < 5) { return; }
         m.origin     = signParts[0];
         m.instrument = signParts[1];
         m.productType = m.procFunc + "_" + m.origin + "_" + m.instrument;
-        obsId        = signParts[2];
-        expos        = signParts[3];
-        m.obsMode    = signParts[4];
+        m.obsMode    = signParts[2];
+        obsId        = signParts[3];
+        expos        = signParts[4];
     } else {
         // TBD
     }
