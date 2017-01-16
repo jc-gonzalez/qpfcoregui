@@ -163,6 +163,17 @@ ProductMetadata & URLHandler::fromInbox2LocalArch()
                     cfgInfo.storage.inbox.path,
                     cfgInfo.storage.local_archive.path + section);
 
+    if (product.hadNoVersion) {
+        std::string a("Z." + product.extension);
+        std::string b("Z_" + product.productVersion + "." + product.extension);
+        
+        str::replaceAll(product.url, a, b);
+        str::replaceAll(newFile,     a, b);
+        str::replaceAll(newUrl,      a, b);
+        
+        product.hadNoVersion = false;
+    }
+    
     // Set (hard) link (should it be move?)
     (void)relocate(file, newFile, MOVE);
 
