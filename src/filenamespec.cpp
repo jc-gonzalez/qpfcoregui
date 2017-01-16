@@ -325,12 +325,14 @@ void FileNameSpec::decodeSignature(ProductMetadata & m)
     m.obsId      = strtoul(obsId.c_str(), NULL, 10);
     m.expos      = strtoul(expos.c_str(), NULL, 10);
 
-    if (m.fileType == "LOG") {
+    if ((m.fileType == "LOG") || (m.fileType == "ARCH")) {
         m.productType += "-" + m.fileType;
-        m.signature = (m.mission + "_" + 
-                       m.productType + "-" + 
-                       obsId + "-" + expos + "-" + m.obsMode);
-    }    
+    }
+    
+    m.signature = (m.mission + "_" + 
+                   m.productType + "-" +
+                   obsId + "-" + expos + "-" + m.obsMode + "_" +
+                   m.productVersion);
 }
 
 std::string FileNameSpec::buildProductId(ProductMetadata & m)
@@ -359,6 +361,24 @@ std::string FileNameSpec::buildProductId(ProductMetadata & m)
     str::replaceAll(id, "%v", m.productVersion);
 
     return id;
+}
+
+std::string FileNameSpec::buildVersion(int major, int minor)
+{
+    char v[6];
+    sprintf(v, "%02d.%02d", major, minor);
+    return std::string(v);
+}
+
+std::string FileNameSpec::incrMinorVersion(std::string & ver)
+{
+    int major, minor;
+    std::stringstream ss(ver);
+    char c;
+    ss >> major >> c >> minor;
+    char v[6];
+    sprintf(v, "%02d.%02d", major, minor + 1);
+    return std::string(v);
 }
 
 #ifdef USE_CX11_REGEX

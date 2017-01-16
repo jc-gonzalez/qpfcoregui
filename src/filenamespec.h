@@ -108,6 +108,10 @@ public:
 
     std::string buildProductId(ProductMetadata & m);
 
+    std::string buildVersion(int major, int minor);
+
+    std::string incrMinorVersion(std::string & ver);
+
 private:
 
 #ifdef USE_CX11_REGEX
