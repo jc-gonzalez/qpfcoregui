@@ -298,10 +298,11 @@ if [ "${REMOVE}" == "yes" ]; then
 fi
 perform mkdir -p "'${BUILD_PATH}'"
 
+cd "${BUILD_PATH}"
+
 ## Generating dependencies and setting makefiles
-if [ "${COMPILE}" == "yes" ]; then
+if [ "${REMOVE}" == "yes" ]; then
     step "Generating dependencies and setting makefiles"
-    cd "${BUILD_PATH}"
     if [ "${HMI}" == "yes" ]; then
         perform cmake -D HMI=ON ${CMAKE_OPTS} ..
     else
@@ -353,6 +354,7 @@ if [ "${INSTALL}" == "yes" ]; then
     step "Creating sample config file from template"
 
     # Get Host name
+    hnamefull=$(uname -n)
     hname=$(uname -n|cut -d. -f1)
 
     if [ -n "$IP" ]; then
@@ -395,7 +397,7 @@ if [ "${INSTALL}" == "yes" ]; then
     say "hip = ${hip}"
     say "target = ${WORK_AREA}/qpf/cfg/qpf-test-${hname}.json"
     # Finally, generate sample config file from template
-    sed -e "s/@THIS_HOST_ADDR@/$hname/g" \
+    sed -e "s/@THIS_HOST_ADDR@/$hnamefull/g" \
         -e "s/@THIS_HOST_IP@/$hip/g" \
         ${WORK_AREA}/qpf/cfg/tpl.cfg.json \
         > ${WORK_AREA}/qpf/cfg/qpf-test-${hname}.json
