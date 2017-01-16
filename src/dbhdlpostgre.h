@@ -241,6 +241,12 @@ public:
     virtual int getVersionCounter(std::string & procName);
 
     //----------------------------------------------------------------------
+    // Method: checkSignature
+    // Check if a product with the same signature exists in the archive
+    //----------------------------------------------------------------------
+    virtual bool checkSignature(std::string & sgnt, std::string & ver);
+
+    //----------------------------------------------------------------------
     // Method: updateTable<T>
     // Template method to update a single field of a table
     //----------------------------------------------------------------------

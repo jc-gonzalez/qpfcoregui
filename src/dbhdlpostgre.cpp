@@ -696,7 +696,7 @@ int DBHdlPostgreSQL::getVersionCounter(std::string & procName)
 {
     bool result;
     std::string cmd("SELECT counter FROM pvc "
-                    "WHERE name LIKE " + 
+                    "WHERE name LIKE " +
                     str::quoted(procName + "%") + " ORDER BY id "
                     "DESC LIMIT 1;");
 
@@ -706,6 +706,34 @@ int DBHdlPostgreSQL::getVersionCounter(std::string & procName)
     PQclear(res);
 
     return cnt;
+}
+
+//----------------------------------------------------------------------
+// Method: checkSignature
+// Check if a product with the same signature exists in the archive
+//----------------------------------------------------------------------
+bool DBHdlPostgreSQL::checkSignature(std::string & sgnt, std::string & ver)
+{
+    bool result = true;
+
+    std::string cmd("SELECT product_version FROM products_info "
+                    "WHERE signature LIKE " +
+                    str::quoted(sgnt + "%") + " ORDER BY id "
+                    "DESC LIMIT 1;");
+
+
+    try {
+        result = runCmd(cmd);
+        result = PQntuples(res) > 0;
+        if (result) {
+            ver = std::string(PQgetvalue(res, 0, 0));
+        }
+    } catch(...) {
+        throw;
+    }
+
+    PQclear(res);
+    return result;
 }
 
 
