@@ -160,6 +160,7 @@ struct ProductMetadata : public JsonStruct {
     FileNamePart   extension;
     URL            url;
     URLSpace       urlSpace;
+    bool           hadNoVersion;
 
     virtual void toFields();
     virtual void toData();
