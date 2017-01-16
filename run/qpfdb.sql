@@ -452,7 +452,7 @@ ALTER TABLE pvc_id_seq OWNER TO eucops;
 ALTER SEQUENCE pvc_id_seq OWNED BY pvc.id;
 
 -- ======================================================================
-COPY pvc  (date, counter, version, name, comment) FROM stdin;
+COPY pvc  (id, date, counter, version, name, comment) FROM stdin;
 1	2016-02-09 14:01:42	1	V0.1                            	LE1_Processor                   	First version of LE1_processor script, just for testing purposes
 2	2016-02-09 14:01:42	1	V1.0                            	QLA_Processor                   	First version of QLA_processor script, just for testing purposes
 3	2017-01-09 14:01:42	2	V1.1                            	QLA_Processor                   	First ammend to version 1.0 of QLA_processor script, again just for testing purposes
