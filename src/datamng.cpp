@@ -260,9 +260,12 @@ void DataManager::saveTaskToDB(Message_TASK_Processing * msg, bool initialStore)
         registerMsg(selfPeer()->name, *pmsgIn);
         setTransmissionToPeer(hdr.destination, pmsgIn);
 
-        InfoMsg("Archiving/Registering data at DSS/EAS");
-        //std::thread(&DataManager::archiveDSSnEAS, this, std::ref(msg->task.outputs)).detach();
-        archiveDSSnEAS(msg->task.outputs);
+        ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
+        if (cfgInfo.flags.arch.sendOutputsToMainArchive) {
+            InfoMsg("Archiving/Registering data at DSS/EAS");
+            //std::thread(&DataManager::archiveDSSnEAS, this, std::ref(msg->task.outputs)).detach();
+            archiveDSSnEAS(msg->task.outputs);
+        }
     }
 }
 
