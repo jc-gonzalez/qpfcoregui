@@ -1538,6 +1538,8 @@ void MainWindow::showArchiveTableContextMenu(const QPoint & p)
         menu.addMenu(acArchiveOpenExt);
 
         if (! m.parent().isValid()) {
+            ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
+            acReprocess->setEnabled(cfgInfo.flags.proc.allowReprocessing);
             menu.addSeparator();
             menu.addAction(acReprocess);
         }
