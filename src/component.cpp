@@ -80,6 +80,8 @@ std::map<std::string, TaskStatus> TaskStatusValue = { TLIST_TASK_STATUS };
 #undef T
 const int BadMsgProcessing = -1;
 
+static const int MsgTypeFrm = (const int)(Router2RouterPeer::FRAME_MSG_TYPE);
+
 //----------------------------------------------------------------------
 // Constructor
 //----------------------------------------------------------------------
@@ -163,6 +165,8 @@ int Component::run()
     Peer inPeer;
     PeerMessage inPeerMsg;
 
+    ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
+
     fromInitialisedToRunning();
 
     /* Transition to Running */
@@ -192,8 +196,10 @@ int Component::run()
             int msgIdx = process(inPeer, inPeerMsg);
             if (msgIdx > 0) {
 
-                DbgMsg("Incoming messsage: " + MessageTypeId[msgIdx]);
-
+                if (cfgInfo.flags.monit.notifyMsgArrival) {
+                    DbgMsg("Incoming messsage: " + MessageTypeId[msgIdx]);
+                }
+                
                 if (canProcess.find(msgIdx) == canProcess.end()) {
                     WarnMsg("Component " + selfPeer()->name +
                             " received an unexpected message: " +
@@ -310,8 +316,6 @@ int Component::process(Router2RouterPeer::Peer & inPeer,
 {
     UNUSED(inPeer);
 
-    static const int MsgTypeFrm = (const int)(Router2RouterPeer::FRAME_MSG_TYPE);
-
     // Look for message type
     int idx;
     for (idx = 0; idx < (int)(MSG_UNKNOWN_IDX); ++idx) {
@@ -323,14 +327,15 @@ int Component::process(Router2RouterPeer::Peer & inPeer,
     // If type not found, return false since message was not processed
     if (idx == (int)(MSG_UNKNOWN_IDX)) { return idx; }
 
-#define WRITE_MESSAGE_FILES    
-#ifdef WRITE_MESSAGE_FILES
-    writeToFile(inPeerMsg);
-#endif
-
     // Otherwise, process it accordingly
+    
     bool result = true;
-
+    
+    ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
+    std::string msgTypeName = MessageTypeId[(int)(idx)];
+    bool writeThisMsgToDisk = cfgInfo.flags.monit.msgsToDisk[msgTypeName];
+    if (writeThisMsgToDisk) { writeToFile(inPeerMsg); }
+    
     switch (idx) {
     case MSG_START_IDX:
         break;
@@ -584,6 +589,18 @@ void Component::registerMsg(std::string from,
                             Router2RouterPeer::PeerMessage & inPeerMsg,
                             bool isBroadcast)
 {
+    // Look for message type, and check if we are configured to store in DB
+    int idx;
+    for (idx = 0; idx < (int)(MSG_UNKNOWN_IDX); ++idx) {
+        if (inPeerMsg.at(MsgTypeFrm).compare(MessageTypeId[idx]) == 0) {
+            break;
+        }
+    }
+    ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
+    std::string msgTypeName = MessageTypeId[(int)(idx)];
+    bool writeThisMsgToDB = cfgInfo.flags.monit.msgsToDB[msgTypeName];
+    if (!writeThisMsgToDB) { return; }
+    
     std::unique_ptr<DBHandler> dbHdl(new DBHdlPostgreSQL);
     DBHandler * db = dbHdl.get();
 
