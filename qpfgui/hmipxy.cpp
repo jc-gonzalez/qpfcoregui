@@ -103,6 +103,15 @@ void HMIProxy::sendMinLogLevel(std::string lvlStr)
 }
 
 //----------------------------------------------------------------------
+// Method: sendNewCfgInfo
+//----------------------------------------------------------------------
+void HMIProxy::sendNewCfgInfo()
+{
+    ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
+    sendMONIT_RQST("*", "set_new_cfg", cfgInfo.toJSONString());
+}
+
+//----------------------------------------------------------------------
 // Method: fromInitialisedToRunning
 //----------------------------------------------------------------------
 void HMIProxy::fromInitialisedToRunning()

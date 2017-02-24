@@ -456,9 +456,16 @@ void Router2RouterPeer::transmissionsHandler()
                 timeSpan = setClock(1);
                 continue;
             }
-
-            PeerName recipient = peerMsg->peer();
-
+            
+            PeerName recipient;
+            try {
+                recipient = peerMsg->peer();
+            } catch(...) {
+                std::cerr << peerMsg << std::endl;
+                for (int i = 0; i < peerMsg->size(); ++i)
+                    std::cerr << i << ": " << peerMsg->at(i) << std::endl;
+            }
+            
             // In case we are still waiting for an ACK from this recipient,
             // do not send more messages
             bool ackFromRecip = ackInfo.waitAckFrom[recipient];

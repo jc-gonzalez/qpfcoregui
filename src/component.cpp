@@ -42,6 +42,7 @@
 
 #include "dbhdlpostgre.h"
 #include "except.h"
+#include "config.h"
 
 #include "log.h"
 using LibComm::Log;
@@ -81,6 +82,14 @@ std::map<std::string, TaskStatus> TaskStatusValue = { TLIST_TASK_STATUS };
 const int BadMsgProcessing = -1;
 
 static const int MsgTypeFrm = (const int)(Router2RouterPeer::FRAME_MSG_TYPE);
+
+#define T(a,b)  a ## _Str = std::string( #b )
+const std::string TLISTOF_MONIT_RQST_COMMANDS;
+#undef T
+
+#define T(a,b)  std::string( #b )
+const std::string MonitRqstCommands[] = { TLISTOF_MONIT_RQST_COMMANDS };
+#undef T
 
 //----------------------------------------------------------------------
 // Constructor
@@ -403,7 +412,7 @@ void Component::processMONIT_RQST()
     PList & plist = msg->variables.paramList;
     for (auto & it : plist) {
         DbgMsg("Incoming message with pair <" + it.first + ", " + it.second + ">");
-        if (it.first == "state") {
+        if (it.first == MONIT_RQST_STATE_Str) {
             it.second = getStateName(getState());
             std::string & recip = msg->header.source;
             MessageData msgToRqstr(new Message_TASK_RES);
@@ -413,11 +422,18 @@ void Component::processMONIT_RQST()
                                                      msgToRqstr.msg->getDataString(),
                                                      MSG_MONIT_INFO);
             setTransmissionToPeer(recip, msgForRqstr);
-        } else if (it.first == "set_min_log_level") {
+        } else if (it.first == MONIT_RQST_MIN_LOG_LVL_Str) {
             std::string & lvlStr = it.second;
+            InfoMsg("Setting log level to " + lvlStr);
             Log::LogLevel & lvl = logLevel[lvlStr];
             Log::setMinLogLevel(lvl);
-            InfoMsg("Setting log level to " + lvlStr);
+        } else if (it.first == MONIT_RQST_NEW_CFG_Str) {
+            InfoMsg("Applying new configuration . . .");
+            std::string & cfgStr = it.second;
+            Json::Reader r;
+            Json::Value cfg;
+            r.parse(cfgStr, cfg);
+            Configuration newConfig(cfg);
         }
     }
 }

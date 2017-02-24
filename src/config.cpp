@@ -97,8 +97,38 @@ Configuration::Configuration(const char * fName)
 //----------------------------------------------------------------------
 // Constructor
 //----------------------------------------------------------------------
+Configuration::Configuration(Json::Value & c)
+{
+    cfg = c;
+    
+    DBHost = cfg["db"]["host"].asString();
+    DBPort = cfg["db"]["port"].asString();
+    DBName = cfg["db"]["name"].asString();
+    DBUser = cfg["db"]["user"].asString();
+    DBPwd  = cfg["db"]["pwd"].asString();
+
+    PATHBase = cfg["storage"]["base"]["path"].asString();
+    PATHRun  = cfg["storage"]["run"]["path"].asString();
+
+    PATHBin     = PATHRun + "/bin";
+    PATHSession = PATHRun + "/" + sessionId;
+    PATHLog     = PATHSession + "/log";
+    PATHRlog    = PATHSession + "/rlog";
+    PATHTmp     = PATHSession + "/tmp";
+    PATHTsk     = PATHSession + "/tsk";
+    PATHMsg     = PATHSession + "/msg";
+
+    isActualFile = false;
+
+    processConfiguration();
+}
+
+//----------------------------------------------------------------------
+// Constructor
+//----------------------------------------------------------------------
 void Configuration::init(std::string fName)
 {
+    isLive = false;
     std::cerr << "Provided fName='" << fName << "'" << std::endl;
     if (fName.compare(0,5,"db://") == 0) {
         std::cerr << "A database URL!" << std::endl;
@@ -127,6 +157,7 @@ void Configuration::init(std::string fName)
     } else {
         readConfigurationFromDB();
     }
+    isLive = true;
 }
 
 //----------------------------------------------------------------------
@@ -648,8 +679,6 @@ void Configuration::processConfiguration()
 
     ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
 
-    Json::StyledWriter w;
-
     // START OF: Configuration Reading
 
     // Now, fill in ConfigurationInfo structure
@@ -708,49 +737,6 @@ void Configuration::processConfiguration()
     }
     dbHdl->closeConnection();
 
-    // Nodes
-    for (int i = 0; i < getNumNodes(); ++i) {
-        Peer * peer = new Peer;
-        getNode(peer->name, peer->type, peer->clientAddr, peer->serverAddr);
-        cfgInfo.peersCfg.push_back(*peer);
-        cfgInfo.peerNames.push_back(peer->name);
-        cfgInfo.peersCfgByName[peer->name] = peer;
-        if (peer->type == "evtmng") {
-            cfgInfo.evtMngCfg.name = peer->name;
-            cfgInfo.evtMngCfg.type = peer->type;
-            cfgInfo.evtMngCfg.clientAddr = peer->clientAddr;
-            cfgInfo.evtMngCfg.serverAddr = peer->serverAddr;
-        }
-    }
-
-    // HMI node
-    cfgInfo.qpfhmiCfg.name = getHMINodeName();
-    getNodeByName(cfgInfo.qpfhmiCfg.name,
-                  cfgInfo.qpfhmiCfg.type,
-                  cfgInfo.qpfhmiCfg.clientAddr,
-                  cfgInfo.qpfhmiCfg.serverAddr);
-
-    // Master node
-    cfgInfo.masterMachine = cfg["nodes"]["master_machine"].asString();
-    cfgInfo.isMaster = (cfgInfo.masterMachine == cfgInfo.currentMachine);
-
-    // Machines and connections
-    reset();
-    std::string mname;
-    std::vector<std::string> mnodes;
-    for (int i = 0; i < getNumMachines(); ++i) {
-        mnodes.clear();
-        getMachine(mname, mnodes);
-        cfgInfo.machines.push_back(mname);
-        cfgInfo.machineNodes[mname] = mnodes;
-    }
-
-    for (unsigned int i = 0; i < cfgInfo.peerNames.size(); ++i) {
-        std::vector<std::string> nconn;
-        getConnectionsForNode(cfgInfo.peerNames.at(i), nconn);
-        cfgInfo.connections[cfgInfo.peerNames.at(i)] = nconn;
-    }
-
     // Storage areas information
     const Json::Value & stge             = cfg["storage"];
     const Json::Value & stgeBase         = stge["base"];
@@ -803,10 +789,55 @@ void Configuration::processConfiguration()
     cfgInfo.flags.monit.groupTaskAgentLogs       = monitFlags["group_task_agent_logs"].asBool();
 
     cfgInfo.flags.proc.allowReprocessing         = procFlags["allow_reprocessing"].asBool();
-    cfgInfo.flags.proc.allowReprocessing         = procFlags["intermediate_products"].asBool();
+    cfgInfo.flags.proc.intermedProducts          = procFlags["intermediate_products"].asBool();
 
     cfgInfo.flags.arch.sendOutputsToMainArchive  = archFlags["send_outputs_to_main_archive"].asBool();
 
+    if (isLive) { return; }
+
+    // Nodes
+    for (int i = 0; i < getNumNodes(); ++i) {
+        Peer * peer = new Peer;
+        getNode(peer->name, peer->type, peer->clientAddr, peer->serverAddr);
+        cfgInfo.peersCfg.push_back(*peer);
+        cfgInfo.peerNames.push_back(peer->name);
+        cfgInfo.peersCfgByName[peer->name] = peer;
+        if (peer->type == "evtmng") {
+            cfgInfo.evtMngCfg.name = peer->name;
+            cfgInfo.evtMngCfg.type = peer->type;
+            cfgInfo.evtMngCfg.clientAddr = peer->clientAddr;
+            cfgInfo.evtMngCfg.serverAddr = peer->serverAddr;
+        }
+    }
+
+    // HMI node
+    cfgInfo.qpfhmiCfg.name = getHMINodeName();
+    getNodeByName(cfgInfo.qpfhmiCfg.name,
+                  cfgInfo.qpfhmiCfg.type,
+                  cfgInfo.qpfhmiCfg.clientAddr,
+                  cfgInfo.qpfhmiCfg.serverAddr);
+
+    // Master node
+    cfgInfo.masterMachine = cfg["nodes"]["master_machine"].asString();
+    cfgInfo.isMaster = (cfgInfo.masterMachine == cfgInfo.currentMachine);
+
+    // Machines and connections
+    reset();
+    std::string mname;
+    std::vector<std::string> mnodes;
+    for (int i = 0; i < getNumMachines(); ++i) {
+        mnodes.clear();
+        getMachine(mname, mnodes);
+        cfgInfo.machines.push_back(mname);
+        cfgInfo.machineNodes[mname] = mnodes;
+    }
+
+    for (unsigned int i = 0; i < cfgInfo.peerNames.size(); ++i) {
+        std::vector<std::string> nconn;
+        getConnectionsForNode(cfgInfo.peerNames.at(i), nconn);
+        cfgInfo.connections[cfgInfo.peerNames.at(i)] = nconn;
+    }
+    
     // END OF: Configuration Reading
 
     // Create peer commnodes for nodes in current machine
@@ -923,5 +954,7 @@ std::string Configuration::PATHTsk;
 std::string Configuration::PATHMsg;
 
 mode_t Configuration::PATHMode = 0755;
+
+bool Configuration::isLive = false;
 
 }

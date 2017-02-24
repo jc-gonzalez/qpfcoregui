@@ -859,6 +859,7 @@ void MainWindow::showConfigTool()
     if (cfgTool.exec()) {
         DMsg("Updating user tools!");
         cfgTool.getExtTools(userDefTools);
+        hmiNode->sendNewCfgInfo();
     }
 }
 
@@ -1498,11 +1499,29 @@ void MainWindow::openWith()
 //----------------------------------------------------------------------
 void MainWindow::reprocessProduct()
 {
+    static const int NumOfURLCol = 10;
+    /*
     QMessageBox::information(this, tr("Reprocess product"),
             tr("The reprocessing of an Euclid data product is not yet "
                "supported in the current release of the " APP_LONG_NAME ".\n\n"
                "It is foreseen that this feature will be available from "
                "next release on.\n\n"), QMessageBox::Close);
+    */
+    QPoint p = acReprocess->property("clickedItem").toPoint();
+    QModelIndex m = ui->treevwArchive->indexAt(p);
+    QString url = m.model()->index(m.row(), NumOfURLCol, m.parent()).data().toString();
+    QUrl archUrl(url);
+    QString fileName = archUrl.path();
+    std::cerr << "Request of reprocessing: " << fileName.toStdString() << std::endl;
+
+    FileNameSpec fns;
+    ProductMetadata md;
+    fns.parseFileName(fileName.toStdString(), md);
+    md.urlSpace = ReprocessingSpace;
+    
+    URLHandler urlh;
+    urlh.setProduct(md);
+    md = urlh.fromFolder2Inbox();
 }
 
 //----------------------------------------------------------------------
@@ -1542,6 +1561,7 @@ void MainWindow::showArchiveTableContextMenu(const QPoint & p)
             acReprocess->setEnabled(cfgInfo.flags.proc.allowReprocessing);
             menu.addSeparator();
             menu.addAction(acReprocess);
+            acReprocess->setProperty("clickedItem", p);
         }
 
         menu.exec(ui->treevwArchive->mapToGlobal(p));

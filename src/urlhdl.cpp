@@ -117,7 +117,8 @@ ProductMetadata & URLHandler::fromFolder2Inbox()
     ConfigurationInfo & cfgInfo = ConfigurationInfo::data();
 
     assert(str::mid(product.url,0,8) == "file:///");
-    assert(product.urlSpace == UserSpace);
+    assert((product.urlSpace == UserSpace) ||
+           (product.urlSpace == ReprocessingSpace));
 
     // Get product basename
     std::vector<std::string> tokens = str::split(product.url, '/');

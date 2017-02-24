@@ -69,6 +69,7 @@ class Configuration {
 public:
     Configuration(std::string fName = std::string());
     Configuration(const char * fName = 0);
+    Configuration(Json::Value & c);
 
     void init(std::string fName);
 
@@ -264,7 +265,7 @@ private:
 
     bool hmiPresent;
     bool isActualFile;
-
+    
 public:
     static std::string DBHost;
     static std::string DBPort;
@@ -284,6 +285,7 @@ public:
 
     static mode_t      PATHMode;
 
+    static bool isLive;
 };
 
 //----------------------------------------------------------------------
