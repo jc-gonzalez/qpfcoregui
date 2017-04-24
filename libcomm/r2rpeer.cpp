@@ -1,4 +1,4 @@
-﻿/******************************************************************************
+/******************************************************************************
  * File:    r2rpeer.cpp
  *          This file is part of the LibComm communications library
  *
@@ -451,7 +451,7 @@ void Router2RouterPeer::transmissionsHandler()
             Transmission tx = *outIt;
             PeerMessage * peerMsg = tx.second;
             if (peerMsg == 0) {
-                outTx.erase(outIt);
+                outTx.pop_front(); // outTx.erase(outIt);
                 outIt = outTx.begin();
                 timeSpan = setClock(1);
                 continue;

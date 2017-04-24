@@ -333,6 +333,8 @@ void FileNameSpec::decodeSignature(ProductMetadata & m)
                    m.productType + "-" +
                    obsId + "-" + expos + "-" + m.obsMode + "_" +
                    m.productVersion);
+
+    m.signature = (obsId + "-" + expos + "-" + m.obsMode);
 }
 
 std::string FileNameSpec::buildProductId(ProductMetadata & m)
